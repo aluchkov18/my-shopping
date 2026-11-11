@@ -12,6 +12,9 @@
 
 Секој од двата мора да му е единствен најдобар кандидат на другиот. Цената не учествува во
 одлуката: таа е она што сакаме да го споредиме.
+
+Веројатните парови чекаат преглед. Пресудите се чуваат во catalog/review.csv (да или не) и важат
+и за следните денови, сè додека називите се исти: потврден пар станува сигурен, одбиен се трга.
 """
 from __future__ import annotations
 
@@ -109,6 +112,15 @@ def collect() -> dict[str, dict[str, list[dict]]]:
     return out
 
 
+def verdicts() -> dict[frozenset, bool]:
+    path = os.path.join(ROOT, "catalog", "review.csv")
+    if not os.path.exists(path):
+        return {}
+    with open(path, encoding="utf-8", newline="") as fh:
+        return {frozenset({(r["chain_a"], r["name_a"]), (r["chain_b"], r["name_b"])}): r["same"] == "да"
+                for r in csv.DictReader(fh)}
+
+
 def same_qty(a, b) -> bool:
     if a is None or b is None:
         return False
@@ -166,7 +178,15 @@ def pairs_for(need_id: str, per: dict[str, list[dict]]) -> list[tuple[dict, dict
             alone_y = first_y[0][1] == i and (len(first_y) == 1 or first_y[1][0] < s)
             if alone_x and alone_y:
                 result.append((per[x][i], per[y][j], s))
-    return result
+    reviewed = verdicts()
+    decided = []
+    for a, b, s in result:
+        verdict = reviewed.get(frozenset({(a["chain"], a["name"]), (b["chain"], b["name"])}))
+        if verdict is None:
+            decided.append((a, b, s))
+        elif verdict:
+            decided.append((a, b, 1.0))
+    return decided
 
 
 def clusters(pairs: list[tuple[dict, dict, float]]) -> list[list[dict]]:
