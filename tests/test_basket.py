@@ -28,3 +28,11 @@ def test_single_compares_only_common_lines():
              {"name": "Месо", "offers": {"zito": {"cost": 300, "by_unit": 300}, "stokomak": None, "kam": None, "ramstore": None}}]
     result = single(lines)
     assert result["common"] == 1 and result["zito"]["by_unit"] == 50 and result["stokomak"]["missing"] == ["Месо"]
+
+
+def test_recipes_use_known_needs():
+    from catalog.needs import NEEDS
+    from planner.recipes import RECIPES
+    known = {n.id for n in NEEDS}
+    assert all(need in known and qty > 0 for parts in RECIPES.values() for need, qty in parts)
+    assert len(RECIPES) >= 20
