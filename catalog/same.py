@@ -158,8 +158,9 @@ def pairs_for(need_id: str, per: dict[str, list[dict]]) -> list[tuple[dict, dict
         related = lambda w, others: any(w.startswith(o) or o.startswith(w) for o in others)
         if any(not related(w, b["kind"]) for w in a["kind"]) and any(not related(w, a["kind"]) for w in b["kind"]):
             return 0.0                                         # ПАСТРМКА наспроти ОСЛИЌ, ГАУДА наспроти ЕДАМЕР
-        if not any(alike(w, v) for w in a["brand"] & rare for v in b["brand"]):
-            return 0.0
+        named = any(alike(w, v) for w in a["brand"] & rare for v in b["brand"])
+        if not named and not (a["numbers"] and a["numbers"] == b["numbers"]):
+            return 0.0                                         # ниту редок збор, ниту ист број (2.8%, Т-400)
         if a["numbers"] != b["numbers"] and a["numbers"] and b["numbers"]:
             return 0.0
         extra = only_a + only_b + (a["numbers"] != b["numbers"])
