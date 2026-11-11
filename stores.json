@@ -1,0 +1,10 @@
+{
+  "city": "Велес",
+  "delay_seconds": 1.2,
+  "chains": {
+    "zito": {"kind": "proverkanaceni", "base": "https://zito.proverkanaceni.mk/"},
+    "stokomak": {"kind": "proverkanaceni", "base": "https://stokomak.proverkanaceni.mk/"},
+    "kam": {"kind": "kam"},
+    "ramstore": {"kind": "ramstore", "match": "veles"}
+  }
+}
