@@ -181,10 +181,14 @@ class Matcher:
         self.no = re.compile(need.no) if need.no else None
         self.zk = re.compile(need.zk) if need.zk else None
         self.zd = set(need.zd)
+        self.must = re.compile(need.must) if need.must else None
+        self.own_pastry = bool(PASTRY.search(need.kw))      # потреба што самата е пециво или панирано
 
     def match(self, chain: str, p: dict) -> bool:
         name, desc = p["name"].upper(), p["description"].upper()
-        if chain == "zito" and self.zd:
+        if self.must and not self.must.search(name):
+            return False
+        if chain == "zito" and self.zd and p["description"]:      # Жито има и редови без категорија
             if p["description"] not in self.zd or BUNDLE.search(name):
                 return False
             if self.zk and not self.zk.search(name):
@@ -199,7 +203,7 @@ class Matcher:
             return False
         if self.need.group in FOOD and NONFOOD.search(text):
             return False
-        if self.need.group in NO_PASTRY and PASTRY.search(name):
+        if self.need.group in NO_PASTRY and not self.own_pastry and PASTRY.search(name):
             return False
         if self.need.fresh and (FRESH_NO.search(text) or (chain != "zito" and not FRESH.search(desc))):
             return False
