@@ -21,6 +21,7 @@ from .digest import today
 
 LOG = os.path.join(ROOT, "alerts", "dnevnik.csv")
 SERVER = "https://ntfy.sh/"
+PAGE = "https://aluchkov18.github.io/my-shopping/"       # допир на пораката ја отвора страницата
 TRIAL = ("My Shopping: проба", "Известувањата работат. По утринското читање на цените тука стигнува што поевтинило и што поскапело.")
 
 
@@ -59,7 +60,7 @@ def main(argv: list[str]) -> int:
         record(kind, "нема канал")
     else:
         try:
-            status = post(topic, message[0], message[1], os.environ.get("NTFY_CLICK", "").strip())
+            status = post(topic, message[0], message[1], os.environ.get("NTFY_CLICK", "").strip() or PAGE)
             record(kind, "пратена" if status == 200 else f"одговор {status}")
         except Exception as error:                      # пораката не смее да го сруши дневното читање
             record(kind, "грешка: " + type(error).__name__)

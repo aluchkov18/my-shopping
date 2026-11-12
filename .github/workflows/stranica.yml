@@ -1,0 +1,47 @@
+name: Страница
+
+# Ја гради страницата со последните цени и ја објавува на GitHub Pages.
+# Тргнува по секое дневно читање, по измена на кодот и рачно.
+on:
+  workflow_run:
+    workflows: ["Дневни цени"]
+    types: [completed]
+  push:
+    branches: [main]
+    paths:
+      - "prototype/**"
+      - "planner/**"
+      - "catalog/**"
+      - ".github/workflows/stranica.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    continue-on-error: true      # додека Pages не е вклучен во поставките, објавувањето паѓа без да го руши текот
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Градење на страницата
+        run: python prototype/build.py --site _site
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: _site
+      - name: Објавување
+        id: deployment
+        uses: actions/deploy-pages@v4
