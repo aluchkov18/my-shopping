@@ -42,6 +42,8 @@ def test_menu_order_and_shopping_list():
     from planner.menu import order, shopping
     from planner.recipes import KIND
     menu = order(["Мусака", "Сарма", "Леќа чорба", "Тавче гравче"])
+    lean = order(["Мусака", "Сарма", "Леќа чорба", "Тавче гравче", "Пита со сирење", "Риба со компири", "Турли тава"], fasting=True)
+    assert lean[2] in ("Леќа чорба", "Тавче гравче") and lean[4] in ("Леќа чорба", "Тавче гравче")
     assert sorted(menu) == sorted(["Мусака", "Сарма", "Леќа чорба", "Тавче гравче"])
     assert all(KIND[a] != KIND[b] for a, b in zip(menu, menu[1:]))
     basket = dict(shopping(["Тавче гравче", "Леќа чорба"], 1.5))
