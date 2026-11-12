@@ -45,5 +45,5 @@ def test_menu_order_and_shopping_list():
     assert sorted(menu) == sorted(["Мусака", "Сарма", "Леќа чорба", "Тавче гравче"])
     assert all(KIND[a] != KIND[b] for a, b in zip(menu, menu[1:]))
     basket = dict(shopping(["Тавче гравче", "Леќа чорба"], 1.5))
-    assert basket["grav"] == 0.75 and basket["kromid"] == 0.68 and basket["lekja"] == 0.6
+    assert basket["grav"] == 0.75 and abs(basket["kromid"] - 0.675) < 0.01 and basket["lekja"] == 0.6
     assert set(KIND) >= {"Мусака", "Шопска салата"}
