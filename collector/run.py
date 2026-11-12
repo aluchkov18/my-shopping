@@ -121,12 +121,16 @@ def main(argv: list[str]) -> int:
                 if rows:
                     path = os.path.join(DATA, "current", chain, f"{store['id']}.csv")
                     previous = storage.read_csv(path)
+                    keep = spec.get("carry_days", 0)          # колку дена се памети ред што денес не е прочитан
+                    saved = storage.carry(previous, rows, today, keep) if keep else rows
+                    if keep:
+                        entry["carried"] = sum(1 for r in saved if r["seen"] != today.isoformat())
                     if previous is not None:
-                        for c in storage.diff(previous, rows):
+                        for c in storage.diff(previous, saved):
                             changes.append({"chain": chain, "store_id": store["id"], **c})
                     entry["first_read"] = previous is None
-                    storage.write_csv(path, rows, FIELDS)
-                    per_store[store["id"]] = rows
+                    storage.write_csv(path, saved, storage.SAVED if keep else FIELDS)
+                    per_store[store["id"]] = saved
             entry["seconds"] = round(time.monotonic() - started, 1)
             results.append(entry)
             print(f"{chain:9} {store['name'][:28]:28} {entry['status']:8} {entry['rows']:6} реда  {entry['seconds']:6}s"

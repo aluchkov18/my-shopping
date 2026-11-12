@@ -146,7 +146,9 @@ def unit_price(p: dict, need: Need, chain: str = "") -> tuple[float | None, int]
 
 
 def load_products() -> dict[str, list[dict]]:
-    """Различни производи по синџир, со најниската денешна цена меѓу продавниците."""
+    """Различни производи по синџир, со најниската цена меѓу продавниците.
+
+    Каде што собирањето памети редови од претходни денови (колона seen), предност има последно прочитаниот."""
     out = {}
     for chain in CHAINS:
         best: dict[tuple, dict] = {}
@@ -155,8 +157,9 @@ def load_products() -> dict[str, list[dict]]:
                 for r in csv.DictReader(fh):
                     key = (r["name"], r["description"])
                     price = float(r["price"] or 0)
-                    if price > 0 and (key not in best or price < best[key]["price"]):
-                        best[key] = {"name": r["name"], "description": r["description"], "price": price,
+                    seen = r.get("seen") or ""
+                    if price > 0 and (key not in best or (seen, -price) > (best[key]["seen"], -best[key]["price"])):
+                        best[key] = {"name": r["name"], "description": r["description"], "price": price, "seen": seen,
                                      "regular": r["regular_price"], "promo": bool(r["discount_price"]),
                                      "unit": r["unit_price"]}
         out[chain] = list(best.values())

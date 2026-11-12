@@ -7,7 +7,9 @@ from __future__ import annotations
 
 import csv
 import os
+import re
 from collections import defaultdict
+from datetime import date, timedelta
 
 from .common import FIELDS
 
@@ -16,6 +18,10 @@ CHANGE_FIELDS = [
     "old_price", "new_price", "old_regular", "new_regular",
     "old_discount", "new_discount", "old_promo", "new_promo", "variants",
 ]
+
+
+SAVED = FIELDS + ["seen"]        # колони во датотека со паметење: и денот кога редот е последен пат прочитан
+_DAY = re.compile(r"(\d{1,2})\.(\d{1,2})\.(\d{4})")
 
 
 def fmt(value) -> str:
@@ -55,6 +61,50 @@ def write_csv(path: str, rows: list[dict], fields: list[str]) -> None:
         writer = csv.DictWriter(fh, fieldnames=fields, lineterminator="\n")
         writer.writeheader()
         writer.writerows(rows)
+
+
+def promo_end(period: str) -> date | None:
+    """Последниот датум во „11.11.2026 до 24.11.2026"."""
+    found = _DAY.findall(period or "")
+    try:
+        return date(int(found[-1][2]), int(found[-1][1]), int(found[-1][0])) if found else None
+    except ValueError:
+        return None
+
+
+def carry(previous: list[dict] | None, rows: list[dict], today: date, days: int) -> list[dict]:
+    """Денешните редови плус оние што денес ги нема, а биле прочитани во последните `days` дена.
+
+    Кај Жито едно читање пропушта околу четвртина од редовите: страниците немаат постојан редослед,
+    па дел од редовите се повторуваат, а дел се прескокнуваат (проба во data/probe/zito.json).
+    Затоа ред што денес го нема не се брише веднаш. Пренесен ред со истечена акција се враќа на редовна цена.
+    """
+    stamp, out, taken = today.isoformat(), [], set()
+    for r in rows:                                   # исти редови повторени во едно читање се запишуваат еднаш
+        full = tuple(r[f] for f in FIELDS)
+        if full not in taken:
+            taken.add(full)
+            out.append({**r, "seen": stamp})
+    have = {(r["name"], r["description"]) for r in rows}
+    yesterday = (today - timedelta(days=1)).isoformat()
+    for r in previous or []:
+        if (r["name"], r["description"]) in have:
+            continue
+        seen = r.get("seen") or yesterday            # датотека од пред паметењето: прочитана е вчера
+        if (today - date.fromisoformat(seen)).days > days:
+            continue
+        old = {f: r.get(f, "") for f in FIELDS}
+        ended = promo_end(old["promo_period"])
+        if old["discount_price"] and ended and ended < today:
+            if not old["regular_price"]:
+                continue
+            old.update(price=old["regular_price"], discount_price="", discount_pct="", promo_type="", promo_period="")
+        full = tuple(old[f] for f in FIELDS)
+        if full not in taken:
+            taken.add(full)
+            out.append({**old, "seen": seen})
+    out.sort(key=lambda r: (r["name"], r["description"], float(r["price"] or 0), r["promo_type"]))
+    return out
 
 
 def diff(old: list[dict], new: list[dict]) -> list[dict]:

@@ -132,3 +132,23 @@ def test_diff_ignores_repeated_rows_and_shows_the_variant_that_moved():
     moved = storage.diff([row("50"), row("60")], [row("50"), row("55", "промотивна цена")])
     assert len(moved) == 1 and moved[0]["kind"] == "changed"
     assert (moved[0]["old_price"], moved[0]["new_price"], moved[0]["new_promo"]) == ("60", "55", "промотивна цена")
+
+
+def test_carry_keeps_rows_missed_today_for_a_few_days():
+    from datetime import date
+    def row(name, price="50", regular="", discount="", period="", seen=None):
+        r = {"name": name, "description": "Млеко", "price": price, "regular_price": regular, "discount_price": discount,
+             "discount_pct": "", "promo_type": "промотивна цена" if discount else "", "promo_period": period, "unit_price": "", "available": "Да"}
+        return r if seen is None else {**r, "seen": seen}
+    today = date(2026, 11, 13)
+    previous = [row("А"), row("Б", seen="2026-11-12"), row("В", seen="2026-11-10"),
+                row("Г", "40", "55", "40", "01.11.2026 до 12.11.2026", seen="2026-11-12"),
+                row("Д", "40", "55", "40", "11.11.2026 до 24.11.2026", seen="2026-11-11")]
+    out = {r["name"]: r for r in storage.carry(previous, [row("Б", "52"), row("Б", "52"), row("Е")], today, 2)}
+    assert set(out) == {"А", "Б", "Г", "Д", "Е"}                        # В не е видено три дена, па отпаѓа
+    assert out["Б"]["price"] == "52" and out["Б"]["seen"] == "2026-11-13" and out["Е"]["seen"] == "2026-11-13"
+    assert out["А"]["seen"] == "2026-11-12"                             # стара датотека без колона: прочитана вчера
+    assert (out["Г"]["price"], out["Г"]["discount_price"], out["Г"]["promo_type"]) == ("55", "", "")   # акцијата истече
+    assert (out["Д"]["price"], out["Д"]["discount_price"]) == ("40", "40")                              # акцијата уште важи
+    assert len(storage.carry(previous, [row("Б", "52"), row("Б", "52")], today, 2)) == 4               # повторен ред еднаш
+    assert storage.carry(None, [row("Е")], today, 2)[0]["seen"] == "2026-11-13"
