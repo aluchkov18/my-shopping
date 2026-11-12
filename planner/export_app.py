@@ -3,7 +3,7 @@
     python -m planner.export_app <излез.json> [датум]
 
 Понуда: [име, цена, цена по единица, големина на пакување или null за на мерење, 0 без акција / 1 акција / 2 акција со картичка,
-         редовна цена кога акцијата бара картичка].
+         редовна цена кога е позната].
 Акција: [синџир, име, цена, редовна, попуст %, важи до, со картичка, потреба, најевтино во градот,
          синџир со истиот производ или -1, цената таму].
 Ист производ: [име, потреба, цена кај секој синџир или null].
@@ -26,7 +26,7 @@ from .recipes import DISHES, POSNO
 NAME = 48      # знаци од името што ги гледа корисникот
 
 
-def offers(hits: list[dict], cards: dict) -> list[list]:
+def offers(hits: list[dict], deals: dict) -> list[list]:
     rows = []
     for h in hits:
         if not h["unit_price"] or h.get("outlier") or (h["trust"] < 2 and h["qty"] != "на мерење"):
@@ -34,19 +34,19 @@ def offers(hits: list[dict], cards: dict) -> list[list]:
         by_weight = h["qty"] == "на мерење" or h["qty"] is None
         size = None if by_weight else round(h["price"] / h["unit_price"], 3)
         row = [h["name"][:NAME], h["price"], h["unit_price"], size, int(bool(h["promo"]))]
-        regular = cards.get((h["chain"], h["name"], h["description"]))
-        if regular:                       # без картичка производот чини колку редовната цена
-            row[4] = 2
-            row.append(regular)
+        deal = deals.get((h["chain"], h["name"], h["description"]))
+        if deal:                          # редовната цена кажува колку штеди акцијата и колку чини производот без картичка
+            row[4] = 2 if deal[1] else 1
+            row.append(deal[0])
         rows.append(row)
     return sorted(rows, key=lambda r: r[2])
 
 
 def build(day: str) -> dict:
     data, found = collect(), promos()
-    cards = {(p["chain"], p["name"], p["description"]): p["regular"] for p in found if p["card"]}
+    deals = {(p["chain"], p["name"], p["description"]): (p["regular"], p["card"]) for p in found}
     needs = {n.id: {"name": n.name, "unit": n.unit, "group": n.group, "keeps": n.group not in PERISHABLE,
-                    "offers": {c: offers(data[n.id][c], cards) for c in CHAINS}} for n in NEEDS}
+                    "offers": {c: offers(data[n.id][c], deals) for c in CHAINS}} for n in NEEDS}
     dishes = {name: {"kind": kind, "posno": name in POSNO, "parts": parts} for name, (kind, parts) in DISHES.items()}
     deals = [[CHAINS.index(p["chain"]), p["name"][:NAME], p["price"], p["regular"], p["pct"], p["until"], int(p["card"]), p["need"],
               int(p["cheapest"]), CHAINS.index(p["elsewhere"][0]) if p["elsewhere"] else -1, p["elsewhere"][1] if p["elsewhere"] else 0]

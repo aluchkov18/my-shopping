@@ -280,16 +280,18 @@ const LOCK = '<svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"
 // --- цени. Акција со картичка важи само кај маркетите каде купувачот има картичка; инаку се брои редовната цена.
 const RAW = Object.fromEntries(Object.entries(D.needs).map(([id, n]) => [id, { ...n.offers }]));
 const CARD_CHAINS = CHAINS.filter(c => Object.values(RAW).some(o => o[c].some(r => r[4] === 2)));
-const minUnit = {}, minChain = {}, needPromo = {};
+const minUnit = {}, minChain = {}, needPromo = {}, saveUnit = {};      // saveUnit: колку е поевтино по единица отколку без ниту една акција во градот
 function reprice(cards) {
   for (const [id, need] of Object.entries(D.needs)) {
-    let best = null;
+    let best = null, plain = Infinity;
     for (const c of CHAINS) {
       const rows = cards[c] === false ? RAW[id][c].map(r => r[4] === 2 ? [r[0], r[5], r[2] * r[5] / r[1], r[3], 0] : r).sort((a, b) => a[2] - b[2]) : RAW[id][c];
       need.offers[c] = rows;
       if (rows[0] && (!best || rows[0][2] < best.r[2])) best = { r: rows[0], c };
+      for (const r of rows) { const u = r[4] && r[5] ? r[2] * r[5] / r[1] : r[2]; if (u < plain) plain = u; }
     }
     minUnit[id] = best ? best.r[2] : null; minChain[id] = best ? best.c : null; needPromo[id] = best ? !!best.r[4] : false;
+    saveUnit[id] = best ? Math.max(0, plain - best.r[2]) : 0;
   }
 }
 reprice({});
@@ -312,15 +314,17 @@ function offer(id, chain, wanted) {
 }
 const MAINS = Object.keys(D.dishes).filter(d => D.dishes[d].kind !== "прилог" && D.dishes[d].parts.every(p => minUnit[p[0]] != null)).sort((a, b) => a.localeCompare(b, "mk"));
 const dishCost = (d, scale) => D.dishes[d].parts.reduce((s, [id, q]) => s + q * scale * minUnit[id], 0);
+const dishSave = (d, scale) => D.dishes[d].parts.reduce((s, [id, q]) => s + q * scale * saveUnit[id], 0);
+const saveTag = sv => sv >= 3 ? `<span class="tag good">акција −${den(sv)}</span>` : "";
 
 // --- избор на мени
 function choose(o) {
   const scale = o.people / PORTIONS, favs = new Set(o.favs), avoid = new Set(o.avoid), fixed = Object.values(o.locked);
-  const pool = MAINS.filter(d => !avoid.has(d) || fixed.includes(d)), cost = Object.fromEntries(pool.map(d => [d, dishCost(d, scale)]));
+  const pool = MAINS.filter(d => !avoid.has(d) || fixed.includes(d)), cost = Object.fromEntries(pool.map(d => [d, dishCost(d, scale)])), gain = Object.fromEntries(pool.map(d => [d, dishSave(d, scale)]));
   const lean = o.fasting ? LEAN_DAYS.length : 0, free = 7 - fixed.length;
   const valid = m => { const k = {}; let l = 0; for (const d of m) { const kind = D.dishes[d].kind; k[kind] = (k[kind] || 0) + 1; if (k[kind] > 2 && !fixed.includes(d)) return false; if (D.dishes[d].posno) l++; } return l >= lean; };
-  const score = m => { let t = 0, f = 0; const k = new Set(); for (const d of m) { t += cost[d]; if (favs.has(d)) f++; k.add(D.dishes[d].kind); } return t > o.budget ? [0, 0, 0, -t] : [1, Math.min(MAX_FAV, f), k.size, o.thrifty ? -t : t]; };
-  const better = (a, b) => { for (let i = 0; i < 4; i++) if (a[i] !== b[i]) return a[i] > b[i]; return false; };
+  const score = m => { let t = 0, f = 0, g = 0; const k = new Set(); for (const d of m) { t += cost[d]; g += gain[d]; if (favs.has(d)) f++; k.add(D.dishes[d].kind); } return t > o.budget ? [0, 0, 0, 0, -t] : [1, Math.min(MAX_FAV, f), k.size, o.thrifty ? 0 : Math.round(g / 10), o.thrifty ? -t : t]; };
+  const better = (a, b) => { for (let i = 0; i < 5; i++) if (a[i] !== b[i]) return a[i] > b[i]; return false; };
   const byPrice = pool.filter(d => !fixed.includes(d)).sort((a, b) => cost[a] - cost[b]), cheapest = [...fixed], kinds = {};
   for (const d of fixed) kinds[D.dishes[d].kind] = (kinds[D.dishes[d].kind] || 0) + 1;
   const haveLean = fixed.filter(d => D.dishes[d].posno).length;
@@ -431,6 +435,7 @@ function renderMenu(R) {
   $("cardCount").textContent = "имам " + CARD_CHAINS.filter(c => S.cards[c] !== false).length + " од " + CARD_CHAINS.length;
   $("cards").innerHTML = CARD_CHAINS.map(c => `<button class="chip" aria-pressed="${S.cards[c] !== false}" data-card="${c}">${esc(LABEL[c])}</button>`).join("");
   $("weekTitle").textContent = "Мени за недела " + S.week;
+  const saved = S.menu.reduce((t, d) => t + dishSave(d, scale), 0);
   const drops = Object.keys(S.watch).filter(id => minUnit[id] != null && minUnit[id] < S.watch[id].p - 0.05);
   $("news").hidden = !drops.length;
   if (drops.length) $("news").textContent = `Поевтино од кога следиш: ${drops.slice(0, 3).map(id => lower(D.needs[id].name)).join(", ")}${drops.length > 3 ? " и уште " + (drops.length - 3) : ""}. Допри за детали.`;
@@ -438,7 +443,7 @@ function renderMenu(R) {
   $("alert").hidden = !over;
   if (over) $("alert").textContent = DAYS.some((_, i) => isMine(i)) ? `Со твоите избори менито излегува ${den(total)} Тоа е ${den(total - S.budget)} над буџетот.` : `Буџетот не стига за седум јадења. Најевтиното мени за ${S.people} чини ${den(S.cheapest)}`;
   $("menu").innerHTML = S.menu.map((d, i) => {
-    const tags = (S.favs.includes(d) ? '<span class="tag">омилено</span>' : "") + (D.dishes[d].posno ? '<span class="tag good">посно</span>' : "");
+    const tags = (S.favs.includes(d) ? '<span class="tag">омилено</span>' : "") + (D.dishes[d].posno ? '<span class="tag good">посно</span>' : "") + saveTag(dishSave(d, scale));
     const parts = S.open === i ? `<div class="parts">${D.dishes[d].parts.map(([id, q]) => `<span><span>${esc(lower(D.needs[id].name))}${needPromo[id] ? " · акција во " + esc(LABEL[minChain[id]]) : ""}</span><span>${amount(q * scale, D.needs[id].unit)}</span></span>`).join("")}` +
       `<button class="ghost" data-pickday="${i}" style="width:100%;margin-top:8px;padding:8px">Избери друго од листата</button></div>` : "";
     return `<div class="day"><span class="d">${DAYS[i]}</span><button class="dishbtn" data-open="${i}" aria-expanded="${S.open === i}"><b>${esc(d)}</b>${tags ? `<span class="tags">${tags}</span>` : ""}</button>` +
@@ -446,7 +451,8 @@ function renderMenu(R) {
       `<button class="icon" data-lock="${i}" aria-pressed="${S.locked[i] === d}" aria-label="Задржи го јадењето за ${DAYS[i]}">${LOCK}</button>${parts}</div>`;
   }).join("") +
     `<div class="total"><span>Состојки за неделата</span><span class="big">${den(total)}</span></div><div class="meter"><i style="width:${Math.min(100, 100 * total / S.budget)}%"></i></div>` +
-    `<p class="note">${over ? "Над буџетот за " + den(total - S.budget) : "Останува " + den(S.budget - total) + " од буџетот"}</p>`;
+    `<p class="note">${over ? "Над буџетот за " + den(total - S.budget) : "Останува " + den(S.budget - total) + " од буџетот"}` +
+    `${saved >= 3 ? " Со акциите ова мени е поевтино за " + den(saved) : ""}</p>`;
   $("menuStore").innerHTML = (R.best ? `<div class="row"><span class="who">${esc(LABEL[R.best])}<span class="tag good">најевтино со сè</span></span><span class="price">${den(R.bestTill)}</span><span class="why">целата листа на едно место, сметка на каса</span></div>` : `<p class="note" style="margin:0">Ниту еден маркет ја нема целата листа.</p>`) +
     `<button class="ghost" data-go="list" style="width:100%;margin-top:12px">Отвори ја листата (${R.lines.length} ставки)</button>`;
   const seen = new Set(), top = PROMOS.filter(p => p.best && !p.card && !seen.has(p.chain) && seen.add(p.chain)).slice(0, 4);
@@ -470,14 +476,15 @@ function renderDishes() {
   $("pickHint").innerHTML = `<b>${DAYS_FULL[V.day]}:</b> ${esc(S.menu[V.day])} (${isMine(V.day) ? "твој избор" : "предлог"}). Неделата: ${den(total).replace(" ден.", "")} од ${den(S.budget)} Твои избори: ${mine} од 7.` +
     (mine ? ` <button class="mini" id="clearPicks">откажи ги моите избори</button>` : " Деновите што нема да ги избереш остануваат со предлог.");
   const slide = $("kindChips").scrollLeft, chip = (v, label) => `<button class="chip" aria-pressed="${V.kind === v}" data-kind="${esc(v)}">${esc(label)}</button>`;
-  $("kindChips").innerHTML = chip("", "Сите " + MAINS.length) + chip("*fav", "Омилени") + chip("*posno", "Посни") + chip("*cheap", "Најевтини") + KINDS.map(k => chip(k, k)).join("");
+  $("kindChips").innerHTML = chip("", "Сите " + MAINS.length) + chip("*fav", "Омилени") + chip("*posno", "Посни") + chip("*cheap", "Најевтини") + chip("*promo", "На акција") + KINDS.map(k => chip(k, k)).join("");
   $("kindChips").scrollLeft = slide;
   const q = lower(V.dq.trim());
-  let list = MAINS.filter(d => (!q || lower(d).includes(q)) && (V.kind === "" || V.kind === "*cheap" || (V.kind === "*fav" ? S.favs.includes(d) : V.kind === "*posno" ? D.dishes[d].posno : D.dishes[d].kind === V.kind)));
+  let list = MAINS.filter(d => (!q || lower(d).includes(q)) && (V.kind === "" || V.kind === "*cheap" || (V.kind === "*promo" ? dishSave(d, scale) >= 3 : V.kind === "*fav" ? S.favs.includes(d) : V.kind === "*posno" ? D.dishes[d].posno : D.dishes[d].kind === V.kind)));
   if (V.kind === "*cheap") list = list.slice().sort((a, b) => dishCost(a, scale) - dishCost(b, scale));
+  if (V.kind === "*promo") list = list.slice().sort((a, b) => dishSave(b, scale) - dishSave(a, scale));
   $("dishList").innerHTML = list.map(d => {
     const at = S.menu.indexOf(d), fav = S.favs.includes(d), open = V.openDish === d;
-    const tags = (D.dishes[d].posno ? '<span class="tag good">посно</span>' : "") + (at >= 0 ? `<span class="tag">${isMine(at) ? "избрано" : "предлог"}: ${DAYS[at]}</span>` : "") + (last.includes(d) ? '<span class="tag warn">минатата недела</span>' : "");
+    const tags = (D.dishes[d].posno ? '<span class="tag good">посно</span>' : "") + (at >= 0 ? `<span class="tag">${isMine(at) ? "избрано" : "предлог"}: ${DAYS[at]}</span>` : "") + saveTag(dishSave(d, scale)) + (last.includes(d) ? '<span class="tag warn">минатата недела</span>' : "");
     const parts = open ? `<div class="parts">${D.dishes[d].parts.map(([id, qty]) => `<span><span>${esc(lower(D.needs[id].name))}, ${amount(qty * scale, D.needs[id].unit)}</span><span>${den(qty * scale * minUnit[id])}</span></span>`).join("")}</div>` : "";
     return `<div class="dish"><button class="icon" data-fav2="${esc(d)}" aria-pressed="${fav}" aria-label="Омилено: ${esc(d)}">${fav ? "♥" : "♡"}</button>` +
       `<button class="dishbtn" data-dopen="${esc(d)}" aria-expanded="${open}"><b>${esc(d)}</b>${tags ? `<span class="tags">${tags}</span>` : ""}</button><span class="price">${den(dishCost(d, scale))}</span>${parts}` +
