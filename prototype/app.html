@@ -100,6 +100,18 @@ details .chips { margin-top: 12px; }
 .item .w { grid-column: 2 / -1; color: var(--muted); font-size: 12px; overflow-wrap: anywhere; }
 .item.done span.n { text-decoration: line-through; color: var(--muted); }
 .item.home { color: var(--muted); }
+.dish { display: grid; grid-template-columns: 30px minmax(0, 1fr) auto; gap: 6px 8px; align-items: start; padding: 11px 0; border-bottom: 1px solid var(--line); }
+.dish:last-child { border-bottom: 0; }
+.dish .price { padding-top: 5px; }
+.dish .dishbtn { padding-top: 4px; }
+.dish .meta { grid-column: 2 / -1; display: flex; align-items: center; justify-content: space-between; gap: 8px; color: var(--muted); font-size: 12.5px; }
+.dish .parts { grid-column: 2 / -1; }
+.pickhead { position: sticky; top: 0; z-index: 4; background: var(--bg); padding: 10px 0; margin: -10px 0; }
+.week { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; margin-top: 10px; }
+.week button { border: 1px solid var(--line); background: var(--surface); border-radius: 10px; padding: 7px 0 6px; font: 600 12px var(--mono); text-transform: uppercase; color: var(--muted); display: grid; gap: 4px; justify-items: center; }
+.week button i { width: 6px; height: 6px; border-radius: 50%; background: var(--line); }
+.week button.mine i { background: var(--accent); }
+.week button[aria-pressed=true] { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
 .mini { border: 1px solid var(--line); background: none; border-radius: 999px; padding: 1px 8px; font-size: 12px; color: var(--muted); }
 .mini[aria-pressed=true] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
 
@@ -146,10 +158,10 @@ footer { color: var(--muted); font-size: 12.5px; line-height: 1.5; }
       <details id="favBox"><summary><span>Омилени јадења</span><span class="count" id="favCount"></span></summary><div class="chips" id="favs"></div></details>
     </section>
     <section>
-      <h2 id="weekTitle">Мени за неделата</h2>
+      <div class="top" style="margin-bottom:10px"><h2 id="weekTitle" style="margin:0">Мени за неделата</h2><button class="add" data-go="dishes">Избери јадења сам</button></div>
       <div id="alert" class="alert" hidden></div>
       <div class="panel receipt" id="menu"></div>
-      <p class="note" id="menuHint">Допри јадење за состојките и за да избереш друго. ↻ дава ново јадење, а катанецот го задржува за тој ден.</p>
+      <p class="note" id="menuHint">Допри јадење за состојките. ↻ дава нов предлог, катанецот го задржува јадењето за тој ден, а со „Избери јадења сам" ги бираш од листата.</p>
     </section>
     <section class="panel" id="menuStore"></section>
     <section><h2>Акции што вредат</h2><div class="panel" id="teaser"></div></section>
@@ -193,6 +205,19 @@ footer { color: var(--muted); font-size: 12.5px; line-height: 1.5; }
     </section>
     <section class="panel" id="regular"></section>
     <section class="panel" id="pantry"></section>
+  </div>
+
+  <div class="view" id="view-dishes" hidden>
+    <section class="pickhead">
+      <div class="top"><h2 style="margin:0">Избери јадења за неделата</h2><button class="add" data-go="menu">Готово</button></div>
+      <div class="week" id="weekStrip"></div>
+    </section>
+    <p class="note" id="pickHint" style="margin:0"></p>
+    <section>
+      <input class="search" id="dq" type="search" placeholder="барај јадење…" autocomplete="off" aria-label="Барај јадење">
+      <div class="chips slide" id="kindChips" style="margin-top:10px"></div>
+    </section>
+    <section class="panel" id="dishList"></section>
   </div>
 
   <div class="view" id="view-tools" hidden>
@@ -285,7 +310,7 @@ function offer(id, chain, wanted) {
   if (best) best.byUnit = lowest * wanted;
   return best;
 }
-const MAINS = Object.keys(D.dishes).filter(d => D.dishes[d].kind !== "прилог" && D.dishes[d].parts.every(p => minUnit[p[0]] != null)).sort();
+const MAINS = Object.keys(D.dishes).filter(d => D.dishes[d].kind !== "прилог" && D.dishes[d].parts.every(p => minUnit[p[0]] != null)).sort((a, b) => a.localeCompare(b, "mk"));
 const dishCost = (d, scale) => D.dishes[d].parts.reduce((s, [id, q]) => s + q * scale * minUnit[id], 0);
 
 // --- избор на мени
@@ -371,7 +396,7 @@ try { const saved = JSON.parse(localStorage.getItem("my-shopping-2") || "null");
 reprice(S.cards);
 const onList = id => S.own[id] != null || S.regular[id] != null;
 const save = () => { try { localStorage.setItem("my-shopping-2", JSON.stringify(S)); } catch (e) {} };
-const V = { chain: "", group: "", best: false, noCard: false, shown: 40, q: "", needGroup: "" };       // што се гледа, не се памти
+const V = { chain: "", group: "", best: false, noCard: false, shown: 40, q: "", needGroup: "", day: null, kind: "", dq: "", openDish: "" };       // што се гледа, не се памти
 function avoided() {
   const recent = S.history.slice(-3), out = new Set(recent.length ? recent[recent.length - 1] : []);
   for (const week of recent.slice(0, -1)) for (const d of week) if (!S.favs.includes(d)) out.add(d);
@@ -411,11 +436,11 @@ function renderMenu(R) {
   if (drops.length) $("news").textContent = `Поевтино од кога следиш: ${drops.slice(0, 3).map(id => lower(D.needs[id].name)).join(", ")}${drops.length > 3 ? " и уште " + (drops.length - 3) : ""}. Допри за детали.`;
   const over = total > S.budget + 0.5;
   $("alert").hidden = !over;
-  if (over) $("alert").textContent = `Буџетот не стига за седум јадења. Најевтиното мени за ${S.people} чини ${den(S.cheapest)}`;
+  if (over) $("alert").textContent = DAYS.some((_, i) => isMine(i)) ? `Со твоите избори менито излегува ${den(total)} Тоа е ${den(total - S.budget)} над буџетот.` : `Буџетот не стига за седум јадења. Најевтиното мени за ${S.people} чини ${den(S.cheapest)}`;
   $("menu").innerHTML = S.menu.map((d, i) => {
     const tags = (S.favs.includes(d) ? '<span class="tag">омилено</span>' : "") + (D.dishes[d].posno ? '<span class="tag good">посно</span>' : "");
     const parts = S.open === i ? `<div class="parts">${D.dishes[d].parts.map(([id, q]) => `<span><span>${esc(lower(D.needs[id].name))}${needPromo[id] ? " · акција во " + esc(LABEL[minChain[id]]) : ""}</span><span>${amount(q * scale, D.needs[id].unit)}</span></span>`).join("")}` +
-      `<select class="pick" data-pick="${i}" aria-label="Друго јадење за ${DAYS[i]}"><option value="">Избери друго јадење…</option>${MAINS.filter(x => x !== d).map(x => `<option value="${esc(x)}">${esc(x)} · ${den(dishCost(x, scale))}</option>`).join("")}</select></div>` : "";
+      `<button class="ghost" data-pickday="${i}" style="width:100%;margin-top:8px;padding:8px">Избери друго од листата</button></div>` : "";
     return `<div class="day"><span class="d">${DAYS[i]}</span><button class="dishbtn" data-open="${i}" aria-expanded="${S.open === i}"><b>${esc(d)}</b>${tags ? `<span class="tags">${tags}</span>` : ""}</button>` +
       `<span class="price">${den(dishCost(d, scale))}</span><button class="icon" data-swap="${i}" aria-label="Друго јадење за ${DAYS[i]}">↻</button>` +
       `<button class="icon" data-lock="${i}" aria-pressed="${S.locked[i] === d}" aria-label="Задржи го јадењето за ${DAYS[i]}">${LOCK}</button>${parts}</div>`;
@@ -426,6 +451,38 @@ function renderMenu(R) {
     `<button class="ghost" data-go="list" style="width:100%;margin-top:12px">Отвори ја листата (${R.lines.length} ставки)</button>`;
   const seen = new Set(), top = PROMOS.filter(p => p.best && !p.card && !seen.has(p.chain) && seen.add(p.chain)).slice(0, 4);
   $("teaser").innerHTML = top.map(promoCard).join("") + `<button class="ghost" data-go="promos" style="width:100%;margin-top:12px">Сите ${PROMOS.length} акции</button>`;
+}
+
+// --- приказ: избор на јадења
+const DAYS_FULL = ["понеделник", "вторник", "среда", "четврток", "петок", "сабота", "недела"];
+const KINDS = Object.entries(MAINS.reduce((k, d) => (k[D.dishes[d].kind] = (k[D.dishes[d].kind] || 0) + 1, k), {})).sort((a, b) => b[1] - a[1]).map(k => k[0]);
+const isMine = i => S.locked[i] != null && S.locked[i] === S.menu[i];
+function nextFree(from) { for (let k = 0; k < 7; k++) if (!isMine((from + k) % 7)) return (from + k) % 7; return from % 7; }
+function put(i, d) {                       // јадењето оди на тој ден како избор на корисникот; ако веќе е во менито, деновите се менуваат
+  const j = S.menu.indexOf(d), prev = S.menu[i], prevMine = isMine(i);
+  if (j >= 0 && j !== i) { S.menu[j] = prev; if (prevMine) S.locked[j] = prev; else delete S.locked[j]; }
+  S.menu[i] = d; S.locked[i] = d;
+}
+function renderDishes() {
+  if (V.day == null) V.day = nextFree(0);
+  const scale = S.people / PORTIONS, total = S.menu.reduce((t, d) => t + dishCost(d, scale), 0), mine = DAYS.filter((_, i) => isMine(i)).length, last = S.history.length ? S.history[S.history.length - 1] : [];
+  $("weekStrip").innerHTML = DAYS.map((d, i) => `<button class="${isMine(i) ? "mine" : ""}" aria-pressed="${V.day === i}" data-day="${i}" aria-label="${DAYS_FULL[i]}: ${esc(S.menu[i])}">${d}<i></i></button>`).join("");
+  $("pickHint").innerHTML = `<b>${DAYS_FULL[V.day]}:</b> ${esc(S.menu[V.day])} (${isMine(V.day) ? "твој избор" : "предлог"}). Неделата: ${den(total).replace(" ден.", "")} од ${den(S.budget)} Твои избори: ${mine} од 7.` +
+    (mine ? ` <button class="mini" id="clearPicks">откажи ги моите избори</button>` : " Деновите што нема да ги избереш остануваат со предлог.");
+  const slide = $("kindChips").scrollLeft, chip = (v, label) => `<button class="chip" aria-pressed="${V.kind === v}" data-kind="${esc(v)}">${esc(label)}</button>`;
+  $("kindChips").innerHTML = chip("", "Сите " + MAINS.length) + chip("*fav", "Омилени") + chip("*posno", "Посни") + chip("*cheap", "Најевтини") + KINDS.map(k => chip(k, k)).join("");
+  $("kindChips").scrollLeft = slide;
+  const q = lower(V.dq.trim());
+  let list = MAINS.filter(d => (!q || lower(d).includes(q)) && (V.kind === "" || V.kind === "*cheap" || (V.kind === "*fav" ? S.favs.includes(d) : V.kind === "*posno" ? D.dishes[d].posno : D.dishes[d].kind === V.kind)));
+  if (V.kind === "*cheap") list = list.slice().sort((a, b) => dishCost(a, scale) - dishCost(b, scale));
+  $("dishList").innerHTML = list.map(d => {
+    const at = S.menu.indexOf(d), fav = S.favs.includes(d), open = V.openDish === d;
+    const tags = (D.dishes[d].posno ? '<span class="tag good">посно</span>' : "") + (at >= 0 ? `<span class="tag">${isMine(at) ? "избрано" : "предлог"}: ${DAYS[at]}</span>` : "") + (last.includes(d) ? '<span class="tag warn">минатата недела</span>' : "");
+    const parts = open ? `<div class="parts">${D.dishes[d].parts.map(([id, qty]) => `<span><span>${esc(lower(D.needs[id].name))}, ${amount(qty * scale, D.needs[id].unit)}</span><span>${den(qty * scale * minUnit[id])}</span></span>`).join("")}</div>` : "";
+    return `<div class="dish"><button class="icon" data-fav2="${esc(d)}" aria-pressed="${fav}" aria-label="Омилено: ${esc(d)}">${fav ? "♥" : "♡"}</button>` +
+      `<button class="dishbtn" data-dopen="${esc(d)}" aria-expanded="${open}"><b>${esc(d)}</b>${tags ? `<span class="tags">${tags}</span>` : ""}</button><span class="price">${den(dishCost(d, scale))}</span>${parts}` +
+      `<span class="meta"><span>${esc(D.dishes[d].kind)} · ${D.dishes[d].parts.length} состојки</span>${at === V.day ? `<span class="tag good">за ${DAYS_FULL[V.day]} ✓</span>` : `<button class="add" data-put="${esc(d)}">За ${DAYS_FULL[V.day]}</button>`}</span></div>`;
+  }).join("") || `<p class="note" style="margin:0">Нема такво јадење.</p>`;
 }
 
 // --- приказ: акции
@@ -551,10 +608,10 @@ function listText(R) {
 
 function render() {
   $("stamp").textContent = D.city + " · цени од " + D.day;
-  for (const t of ["menu", "promos", "prices", "list", "tools"]) $("view-" + t).hidden = S.tab !== t;
-  document.querySelectorAll("nav.tabs button").forEach(b => b.dataset.tab === S.tab ? b.setAttribute("aria-current", "page") : b.removeAttribute("aria-current"));
+  for (const t of ["menu", "dishes", "promos", "prices", "list", "tools"]) $("view-" + t).hidden = S.tab !== t;
+  document.querySelectorAll("nav.tabs button").forEach(b => b.dataset.tab === (S.tab === "dishes" ? "menu" : S.tab) ? b.setAttribute("aria-current", "page") : b.removeAttribute("aria-current"));
   const R = shop(); S.after = R.home; window.R = R;
-  if (S.tab === "menu") renderMenu(R); else if (S.tab === "promos") renderPromos(); else if (S.tab === "prices") renderPrices(); else if (S.tab === "tools") renderTools(); else renderList(R);
+  if (S.tab === "menu") renderMenu(R); else if (S.tab === "dishes") renderDishes(); else if (S.tab === "promos") renderPromos(); else if (S.tab === "prices") renderPrices(); else if (S.tab === "tools") renderTools(); else renderList(R);
   save();
 }
 function replan() { plan(); render(); }
@@ -572,13 +629,8 @@ $("menu").addEventListener("click", e => {
   if (b.dataset.swap) swap(+b.dataset.swap);
   else if (b.dataset.lock) { const i = +b.dataset.lock; if (S.locked[i] === S.menu[i]) delete S.locked[i]; else S.locked[i] = S.menu[i]; }
   else if (b.dataset.open) S.open = S.open === +b.dataset.open ? -1 : +b.dataset.open;
+  else if (b.dataset.pickday) { V.day = +b.dataset.pickday; S.tab = "dishes"; window.scrollTo({ top: 0 }); }
   render();
-});
-$("menu").addEventListener("change", e => {
-  const i = +e.target.dataset.pick, d = e.target.value; if (!e.target.dataset.pick || !D.dishes[d]) return;
-  const j = S.menu.indexOf(d);
-  if (j >= 0) { S.menu[j] = S.menu[i]; delete S.locked[j]; }
-  S.menu[i] = d; S.locked[i] = d; S.open = -1; render();
 });
 $("next").addEventListener("click", () => { for (const id of S.done) delete S.own[id]; S.history = [...S.history, S.menu].slice(-4); S.pantry = S.after || {}; S.week++; S.locked = {}; S.done = []; replan(); window.scrollTo({ top: 0, behavior: "smooth" }); });
 $("reset").addEventListener("click", () => { S = { ...fresh(), tab: S.tab, watch: S.watch, spent: S.spent, regular: S.regular, cards: S.cards }; replan(); });
@@ -595,6 +647,12 @@ document.addEventListener("click", e => {
   else if (b.id === "clearRegular") { S.regular = {}; render(); }
   else if (b.dataset.own) { e.preventDefault(); const id = b.dataset.own, box = S.regular[id] != null ? S.regular : S.own, q = Math.round(((box[id] || 0) + +b.dataset.step * pack(id)) * 100) / 100; if (q <= 0.005) delete box[id]; else box[id] = q; render(); }
   else if (b.id === "emptyPantry") { S.pantry = {}; render(); }
+  else if (b.dataset.day) { V.day = +b.dataset.day; render(); }
+  else if (b.dataset.kind !== undefined) { V.kind = b.dataset.kind; render(); }
+  else if (b.dataset.dopen) { V.openDish = V.openDish === b.dataset.dopen ? "" : b.dataset.dopen; render(); }
+  else if (b.dataset.fav2) { const d = b.dataset.fav2; S.favs = S.favs.includes(d) ? S.favs.filter(x => x !== d) : [...S.favs, d]; replan(); }
+  else if (b.dataset.put) { put(V.day, b.dataset.put); V.day = nextFree((V.day + 1) % 7); replan(); }
+  else if (b.id === "clearPicks") { S.locked = {}; replan(); }
   else if (b.dataset.watch) { const id = b.dataset.watch; if (S.watch[id]) delete S.watch[id]; else S.watch[id] = { p: minUnit[id], d: D.day.slice(0, 6) }; render(); }
   else if (b.dataset.have) { const id = b.dataset.have; S.have = S.have.includes(id) ? S.have.filter(x => x !== id) : [...S.have, id]; render(); }
   else if (b.dataset.cook) { const scale = S.people / PORTIONS; for (const [id, q] of D.dishes[b.dataset.cook].parts) if (!S.have.includes(id)) S.own[id] = Math.round(((S.own[id] || 0) + q * scale) * 100) / 100; b.textContent = "на листа ✓"; b.disabled = true; save(); }
@@ -605,6 +663,7 @@ $("morePromos").addEventListener("click", () => { V.shown += 60; render(); });
 $("onlyBest").addEventListener("change", e => { V.best = e.target.checked; V.shown = 40; render(); });
 $("noCard").addEventListener("change", e => { V.noCard = e.target.checked; V.shown = 40; render(); });
 for (const id of ["caP", "caQ", "cbP", "cbQ", "calcUnit"]) $(id).addEventListener("input", calc);
+$("dq").addEventListener("input", e => { V.dq = e.target.value; renderDishes(); });
 $("q").addEventListener("input", e => { V.q = e.target.value; V.needGroup = ""; renderPrices(); });
 $("items").addEventListener("change", e => { const id = e.target.dataset.done; if (!id) return; S.done = e.target.checked ? [...S.done, id] : S.done.filter(x => x !== id); render(); });
 $("clearDone").addEventListener("click", () => { S.done = []; render(); });
