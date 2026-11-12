@@ -59,7 +59,11 @@ def lowest(per_chain: dict[str, dict]) -> tuple[str, dict] | None:
 
 
 def changes(old: dict, new: dict) -> list[dict]:
-    """Потреби каде најниската цена во градот се смени за повеќе од STEP. Најголемите поевтинувања први."""
+    """Потреби каде најниската цена во градот се смени за повеќе од STEP. Најголемите поевтинувања први.
+
+    sure: поевтинувањето се гледа во денешниот ценовник, па е сигурно. Поскапување е сигурно само кога
+    истиот производ кај истиот синџир денес чини повеќе; ако вчерашниот најевтин производ го нема во
+    денешното читање, можеби само е пропуштен (Жито не ги дава сите редови при секое читање)."""
     out = []
     for need in new:
         before, after = lowest(old.get(need, {})), lowest(new[need])
@@ -67,8 +71,9 @@ def changes(old: dict, new: dict) -> list[dict]:
             continue
         a, b = before[1]["unit_price"], after[1]["unit_price"]
         if abs(b - a) > STEP * a:
+            same = new[need].get(before[0], {}).get("name") == before[1]["name"]
             out.append({"need": need, "old": a, "new": b, "chain": after[0], "name": after[1]["name"], "promo": after[1]["promo"],
-                        "pct": round(100 * (b / a - 1))})
+                        "pct": round(100 * (b / a - 1)), "sure": b < a or same})
     return sorted(out, key=lambda c: (c["pct"], c["need"]))
 
 

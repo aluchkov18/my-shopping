@@ -315,15 +315,18 @@ function offer(id, chain, wanted) {
 const MAINS = Object.keys(D.dishes).filter(d => D.dishes[d].kind !== "прилог" && D.dishes[d].parts.every(p => minUnit[p[0]] != null)).sort((a, b) => a.localeCompare(b, "mk"));
 const dishCost = (d, scale) => D.dishes[d].parts.reduce((s, [id, q]) => s + q * scale * minUnit[id], 0);
 const dishSave = (d, scale) => D.dishes[d].parts.reduce((s, [id, q]) => s + q * scale * saveUnit[id], 0);
+const PROMO_PULL = 4;      // денар заштеден со акција вреди колку четири денари побогато мени
 const saveTag = sv => sv >= 3 ? `<span class="tag good">акција −${den(sv)}</span>` : "";
 
 // --- избор на мени
 function choose(o) {
   const scale = o.people / PORTIONS, favs = new Set(o.favs), avoid = new Set(o.avoid), fixed = Object.values(o.locked);
   const pool = MAINS.filter(d => !avoid.has(d) || fixed.includes(d)), cost = Object.fromEntries(pool.map(d => [d, dishCost(d, scale)])), gain = Object.fromEntries(pool.map(d => [d, dishSave(d, scale)]));
+  // главни состојки: двете што чинат најмногу во јадењето; мени во кое тие се повторуваат е помалку разновидно
+  const main = Object.fromEntries(pool.map(d => [d, D.dishes[d].parts.slice().sort((a, b) => b[1] * minUnit[b[0]] - a[1] * minUnit[a[0]]).slice(0, 2).map(p => p[0])]));
   const lean = o.fasting ? LEAN_DAYS.length : 0, free = 7 - fixed.length;
   const valid = m => { const k = {}; let l = 0; for (const d of m) { const kind = D.dishes[d].kind; k[kind] = (k[kind] || 0) + 1; if (k[kind] > 2 && !fixed.includes(d)) return false; if (D.dishes[d].posno) l++; } return l >= lean; };
-  const score = m => { let t = 0, f = 0, g = 0; const k = new Set(); for (const d of m) { t += cost[d]; g += gain[d]; if (favs.has(d)) f++; k.add(D.dishes[d].kind); } return t > o.budget ? [0, 0, 0, 0, -t] : [1, Math.min(MAX_FAV, f), k.size, o.thrifty ? 0 : Math.round(g / 10), o.thrifty ? -t : t]; };
+  const score = m => { let t = 0, f = 0, g = 0; const k = new Set(), n = new Set(); for (const d of m) { t += cost[d]; g += gain[d]; if (favs.has(d)) f++; k.add(D.dishes[d].kind); for (const id of main[d]) n.add(id); } return t > o.budget ? [0, 0, 0, 0, -t] : [1, Math.min(MAX_FAV, f), k.size, n.size, o.thrifty ? -t : t + PROMO_PULL * g]; };   // побогато мени, со предност за заштеда од акции
   const better = (a, b) => { for (let i = 0; i < 5; i++) if (a[i] !== b[i]) return a[i] > b[i]; return false; };
   const byPrice = pool.filter(d => !fixed.includes(d)).sort((a, b) => cost[a] - cost[b]), cheapest = [...fixed], kinds = {};
   for (const d of fixed) kinds[D.dishes[d].kind] = (kinds[D.dishes[d].kind] || 0) + 1;

@@ -40,3 +40,6 @@ def test_history_reports_only_real_moves_of_the_city_minimum():
     out = changes(old, new)
     assert [c["need"] for c in out] == ["mleko-trajno", "seker"]                 # оризот е заокружување, јајцата немаат вчера
     assert out[0]["chain"] == "kam" and out[0]["pct"] == -8 and out[0]["promo"] and out[1]["pct"] == 10
+    assert out[0]["sure"] and out[1]["sure"]                                     # шеќерот е истиот производ, поскап
+    gone = changes({"seker": {"zito": row(60, "ШЕЌЕР А")}}, {"seker": {"zito": row(66, "ШЕЌЕР Б")}})
+    assert gone[0]["pct"] == 10 and not gone[0]["sure"]                          # вчерашниот производ го нема: можеби е само пропуштен

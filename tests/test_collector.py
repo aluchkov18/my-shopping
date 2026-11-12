@@ -124,3 +124,11 @@ def test_dates_and_spread():
     b = [{"name": "А", "description": "", "price": "10"}, {"name": "Б", "description": "", "price": "22"}]
     assert spread({"1": a}) is None
     assert spread({"1": a, "2": b}) == {"stores": 2, "products_in_2plus_stores": 2, "same_price_everywhere": 1}
+
+
+def test_diff_ignores_repeated_rows_and_shows_the_variant_that_moved():
+    row = lambda price, promo="": {"name": "МЛЕКО 1л", "description": "Млеко", "price": price, "regular_price": "60", "discount_price": "", "promo_type": promo}
+    assert storage.diff([row("60"), row("60")], [row("60")]) == []                       # истиот ред повторен: не е промена
+    moved = storage.diff([row("50"), row("60")], [row("50"), row("55", "промотивна цена")])
+    assert len(moved) == 1 and moved[0]["kind"] == "changed"
+    assert (moved[0]["old_price"], moved[0]["new_price"], moved[0]["new_promo"]) == ("60", "55", "промотивна цена")

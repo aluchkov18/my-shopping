@@ -37,7 +37,7 @@ def compose(moved: list[dict], promos: list[dict], watch: list[str], day: str) -
         return (f"• {need.name}: {money(c['old'])} → {money(c['new'])} ден. за 1 {need.unit}, {LABEL[c['chain']]}"
                 + (" (акција)" if c["promo"] else ""))
 
-    known = [c for c in moved if c["need"] in needs]
+    known = [c for c in moved if c["need"] in needs and c.get("sure", True)]
     down = [c for c in known if c["need"] in chosen and c["pct"] < 0]
     up = sorted((c for c in known if c["need"] in chosen and c["pct"] > 0), key=lambda c: -c["pct"])
     city = [c for c in known if c["need"] not in chosen and c["pct"] <= BIG][:3]

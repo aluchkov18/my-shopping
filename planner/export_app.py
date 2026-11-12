@@ -59,7 +59,7 @@ def build(day: str) -> dict:
             same.append([name[:NAME], group[0]["need"]] + [price.get(c) for c in CHAINS])
     since, moved = latest()
     return {"since": ".".join(reversed(since.split("-"))) if since else "",
-            "changes": [[c["need"], c["old"], c["new"], CHAINS.index(c["chain"])] for c in moved if c["need"] in needs],
+            "changes": [[c["need"], c["old"], c["new"], CHAINS.index(c["chain"])] for c in moved if c["need"] in needs and c["sure"]],
             "same": sorted(same, key=lambda r: -(max(v for v in r[2:] if v) - min(v for v in r[2:] if v))),
             "day": day, "city": "Велес", "chains": [[c, LABEL[c]] for c in CHAINS], "groups": list(dict.fromkeys(n.group for n in NEEDS)),
             "needs": needs, "dishes": dishes, "promos": deals}

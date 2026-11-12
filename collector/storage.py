@@ -64,7 +64,8 @@ def diff(old: list[dict], new: list[dict]) -> list[dict]:
         for r in rows:
             by_key[(r["name"], r["description"])].append(
                 (r["price"], r["regular_price"], r["discount_price"], r["promo_type"]))
-        return {k: sorted(v, key=lambda s: (float(s[0] or 0), s)) for k, v in by_key.items()}
+        # Различни варијанти, без повторувања: Жито го повторува истиот ред, секој ден различен број пати.
+        return {k: sorted(set(v), key=lambda s: (float(s[0] or 0), s)) for k, v in by_key.items()}
 
     before, after = group(old), group(new)
     changes = []
@@ -73,7 +74,9 @@ def diff(old: list[dict], new: list[dict]) -> list[dict]:
         if a == b:
             continue
         kind = "new" if a is None else "removed" if b is None else "changed"
-        x, y = (a or [("", "", "", "")])[0], (b or [("", "", "", "")])[0]
+        only_old, only_new = [v for v in a or [] if v not in (b or [])], [v for v in b or [] if v not in (a or [])]
+        x = (only_old or a or [("", "", "", "")])[0]          # варијантата што се смени, не само најевтината
+        y = (only_new or b or [("", "", "", "")])[0]
         changes.append({
             "kind": kind, "name": key[0], "description": key[1],
             "old_price": x[0], "new_price": y[0], "old_regular": x[1], "new_regular": y[1],
