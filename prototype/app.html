@@ -1,262 +1,361 @@
 <title>My Shopping</title>
 <meta name="claude:viewport-fit-sides" content="cover">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700&family=Onest:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@600;700;800&family=Nunito+Sans:wght@400;600;700;800&display=swap">
 <style>
-/* Layout: one phone-width column with four views behind a bottom bar; the week reads like a till receipt. */
+/* Fresh v02 (светол изглед според водичот; темниот е пробен и се вклучува во Поставки): крем позадина, виолетова за главни дејства, лаванда за буџет, свеж зелен акцент за „избрано" и „најевтино",
+   праска за попуст. Наслови и цени во Manrope 800, текст во Nunito Sans. Една колона за телефон, со лента за главно дејство над навигацијата. */
 :root {
-  --bg: #f4f3f7; --surface: #ffffff; --ink: #1e1a26; --muted: #6a6477; --line: #e2dfe9;
-  --accent: #5b2a86; --accent-ink: #ffffff; --accent-soft: #efe7f7;
-  --good: #1b7449; --good-bg: #e1f2e8; --warn: #96520a; --warn-bg: #fbeedb;
-  --display: "Unbounded", "Onest", system-ui, sans-serif;
-  --body: "Onest", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  --mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  --bg: #FEFCF8; --surface: #FFFFFF; --ink: #30213D; --muted: #746B7D; --line: #E9E0ED;
+  --primary: #62308C; --on-primary: #FFFFFF;
+  --lav: #E9DCFB; --lav-ink: #4A2470; --lime: #D5F578; --lime-ink: #2F3B10;
+  --peach: #FFB48F; --peach-ink: #6D352B; --ok-bg: #EDF5DF; --ok-ink: #466133;
+  --warn-bg: #FFEDE2; --warn-ink: #6D352B;
+  --t-lav: #F4EDFD; --i-lav: #E1D0F7; --t-green: #EDF5E1; --i-green: #CFE8A8; --t-peach: #FFEEE3; --i-peach: #FFC6A6; --t-sky: #EAF2FC; --i-sky: #CFE3F8;
+  --head: "Manrope", "Nunito Sans", system-ui, sans-serif;
+  --body: "Nunito Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  color-scheme: light;
 }
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
-  --bg: #15121b; --surface: #1f1b29; --ink: #eeeaf5; --muted: #a59eb4; --line: #342e42;
-  --accent: #b891e3; --accent-ink: #1b1026; --accent-soft: #2c2340;
-  --good: #72d3a2; --good-bg: #173326; --warn: #f0b866; --warn-bg: #3a2a10; color-scheme: dark } }
 :root[data-theme="dark"] {
-  --bg: #15121b; --surface: #1f1b29; --ink: #eeeaf5; --muted: #a59eb4; --line: #342e42;
-  --accent: #b891e3; --accent-ink: #1b1026; --accent-soft: #2c2340;
-  --good: #72d3a2; --good-bg: #173326; --warn: #f0b866; --warn-bg: #3a2a10; color-scheme: dark }
+  --bg: #17121D; --surface: #221A2C; --ink: #F3ECF8; --muted: #AEA3BA; --line: #3A2F47;
+  --primary: #B48AE6; --on-primary: #1D1228;
+  --lav: #3A2A55; --lav-ink: #E6D8FA; --lime: #D5F578; --lime-ink: #2F3B10;
+  --peach: #FFB48F; --peach-ink: #6D352B; --ok-bg: #26331C; --ok-ink: #C4E19F;
+  --warn-bg: #3E2A22; --warn-ink: #FFC9AE;
+  --t-lav: #2A2038; --i-lav: #45306A; --t-green: #232E1C; --i-green: #3D5226; --t-peach: #37261F; --i-peach: #6A4130; --t-sky: #1F2A39; --i-sky: #2F4763;
+  color-scheme: dark }
 
-body { background: var(--bg); color: var(--ink); font: 400 15px/1.45 var(--body);
-  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 20px 96px; }
+* { box-sizing: border-box; }
 [hidden] { display: none !important; }
-main { max-width: 540px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
-.view { display: flex; flex-direction: column; gap: 20px; }
-h1 { font: 700 22px/1.1 var(--display); margin: 0; letter-spacing: -0.01em; }
-h2 { font: 500 12px/1.2 var(--display); margin: 0 0 10px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
-.top { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
-.stamp { font: 400 12px var(--mono); color: var(--muted); }
-.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 16px; }
-.controls { display: grid; gap: 14px; }
-.field { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-.field > label, .field > span.name { font-weight: 500; }
-.money { display: flex; align-items: center; gap: 6px; font: 600 16px var(--mono); }
-.money input { width: 6.2ch; font: inherit; color: inherit; background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 6px 8px; text-align: right; }
-input[type=range] { width: 100%; accent-color: var(--accent); }
-.stepper { display: flex; align-items: center; gap: 10px; font: 600 16px var(--mono); }
-button { font: 500 15px var(--body); color: inherit; cursor: pointer; }
-button:focus-visible, input:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-.round { width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--line); background: var(--bg); line-height: 1; font-size: 18px; flex: none; }
-.round.small { width: 28px; height: 28px; font-size: 15px; }
-.switch { appearance: none; width: 46px; height: 26px; border-radius: 13px; background: var(--line); position: relative; cursor: pointer; transition: background .15s; margin: 0; flex: none; }
-.switch::after { content: ""; position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%; background: var(--surface); transition: transform .15s; }
-.switch:checked { background: var(--accent); }
-.switch:checked::after { transform: translateX(20px); }
-details > summary { cursor: pointer; font-weight: 500; list-style: none; display: flex; justify-content: space-between; gap: 12px; }
-details > summary::-webkit-details-marker { display: none; }
-.count { color: var(--muted); font-weight: 400; }
-.chips { display: flex; flex-wrap: wrap; gap: 6px; }
-details .chips { margin-top: 12px; }
-.chips.slide { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; }
+body { background: var(--bg); color: var(--ink); font: 600 14px/1.45 var(--body);
+  padding: 0 max(16px, env(safe-area-inset-right, 0px)) calc(76px + 74px + 28px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); }
+body.noaction { padding-bottom: calc(76px + 28px + env(safe-area-inset-bottom, 0px)); }
+main, .appbar { max-width: 480px; margin: 0 auto; }
+.view { display: flex; flex-direction: column; gap: 16px; }
+svg.ic { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+button { font: inherit; color: inherit; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+button:focus-visible, input:focus-visible, select:focus-visible, summary:focus-visible { outline: 2.5px solid var(--primary); outline-offset: 2px; }
+
+.appbar { height: 68px; display: flex; align-items: center; gap: 12px; }
+.logo { width: 40px; height: 40px; border-radius: 12px; background: var(--primary); color: var(--on-primary); display: grid; place-items: center; flex: none; }
+.appbar .name { flex: 1; min-width: 0; display: grid; }
+.appbar .name b { font: 800 17px/1.2 var(--head); letter-spacing: -0.01em; }
+.appbar .name small { font-size: 12px; color: var(--muted); }
+.roundbtn { width: 48px; height: 48px; border-radius: 50%; border: 0; background: var(--lav); color: var(--lav-ink); display: grid; place-items: center; flex: none; }
+.roundbtn[aria-pressed=true] { background: var(--primary); color: var(--on-primary); }
+
+h1 { font: 800 26px/1.25 var(--head); letter-spacing: -0.015em; margin: 2px 0 0; }
+h2 { font: 800 16px/1.3 var(--head); margin: 0 0 10px; }
+.sub { color: var(--muted); margin: -12px 0 0; }
+.cap { font: 800 11px/1.3 var(--body); letter-spacing: 0.07em; text-transform: uppercase; }
+.seclabel { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 32px; margin-top: 4px; color: var(--muted); }
+.seclabel .cap i { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 8px; }
+.seclabel.named { color: var(--ink); justify-content: flex-start; }
+.seclabel.named b { font: 800 14px var(--head); }
+.link { background: none; border: 0; padding: 0; min-height: 48px; color: var(--primary); font: 800 13px var(--head); display: inline-flex; align-items: center; gap: 6px; }
+.link svg.ic { width: 16px; height: 16px; }
+.note { color: var(--muted); font-size: 13px; margin: 0; }
+.stack { display: flex; flex-direction: column; gap: 12px; }
+.card { background: var(--surface); border: 1.5px solid var(--line); border-radius: 24px; padding: 18px; }
+.card.flush { padding: 0; overflow: hidden; }
+
+.primary, .soft, .ghost { height: 52px; border-radius: 26px; border: 0; padding: 0 22px; font: 800 14px var(--head); display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+.primary { background: var(--primary); color: var(--on-primary); flex: 1; }
+.primary svg.ic, .soft svg.ic { width: 18px; height: 18px; }
+.soft { background: var(--lav); color: var(--lav-ink); height: 48px; border-radius: 24px; }
+.soft.done { background: var(--ok-bg); color: var(--ok-ink); }
+.soft.small { height: 48px; padding: 0 18px; font-size: 13px; flex: none; }
+.ghost { background: none; border: 1.5px solid var(--line); height: 48px; border-radius: 24px; }
+.wide { width: 100%; }
+.ico { width: 48px; height: 48px; border-radius: 50%; border: 0; background: none; color: var(--muted); display: grid; place-items: center; flex: none; }
+.ico svg.ic { width: 20px; height: 20px; }
+.ico[aria-pressed=true] { color: var(--primary); background: var(--lav); }
+.ico[aria-pressed=true] svg.fillable { fill: currentColor; }
+
+.banner { border: 0; width: 100%; text-align: left; border-radius: 18px; padding: 12px 16px; font: 700 13.5px/1.4 var(--body); display: flex; gap: 10px; align-items: flex-start; }
+.banner.good { background: var(--ok-bg); color: var(--ok-ink); }
+.banner.warn { background: var(--warn-bg); color: var(--warn-ink); }
+
+.budget { position: relative; background: var(--lav); color: var(--ink); border-radius: 26px; padding: 20px; overflow: hidden; }
+.budget .cap { color: var(--lav-ink); }
+.bigprice { display: flex; align-items: baseline; gap: 6px; font-variant-numeric: tabular-nums; }
+.bigprice b { font: 800 38px/1.1 var(--head); letter-spacing: -0.02em; }
+.bigprice span { font: 800 14px var(--head); }
+.bigprice.xl b { font-size: 43px; }
+.budget .bigprice { margin-top: 10px; }
+.budget .of { color: var(--muted); font-size: 13px; }
+.meter { height: 5px; border-radius: 3px; background: color-mix(in srgb, var(--primary) 20%, transparent); margin: 14px 0; overflow: hidden; max-width: calc(100% - 112px); }
+.meter.full { max-width: none; }
+.meter i { display: block; height: 100%; background: var(--primary); border-radius: 3px; }
+.pill { display: inline-flex; align-items: center; gap: 6px; border-radius: 999px; padding: 7px 14px; font: 800 12.5px var(--body); background: var(--surface); color: var(--ink); }
+.pill.lime { background: var(--lime); color: var(--lime-ink); }
+.pill svg.ic { width: 15px; height: 15px; stroke-width: 2.6; }
+.budget .art { position: absolute; right: 4px; top: 26px; width: 128px; height: 117px; pointer-events: none; }
+
+.dishrow { display: grid; grid-template-columns: 52px minmax(0, 1fr) auto; gap: 0 12px; align-items: center; border-radius: 24px; padding: 14px 6px 10px 16px; background: var(--t-lav); }
+.t-lav { background: var(--t-lav); } .t-green { background: var(--t-green); } .t-peach { background: var(--t-peach); } .t-sky { background: var(--t-sky); }
+.tile { width: 52px; height: 52px; border-radius: 18px; display: grid; place-items: center; background: var(--i-lav); color: var(--ink); flex: none; }
+.t-green > .tile, .tile.t-green { background: var(--i-green); } .t-peach > .tile, .tile.t-peach { background: var(--i-peach); } .t-sky > .tile, .tile.t-sky { background: var(--i-sky); } .tile.t-lav { background: var(--i-lav); }
+.tile svg.ic { width: 24px; height: 24px; stroke-width: 1.8; }
+.dishbtn { background: none; border: 0; padding: 0; text-align: left; min-width: 0; min-height: 48px; display: grid; gap: 1px; align-content: center; }
+.dishbtn .day { font: 800 11px var(--body); letter-spacing: 0.07em; text-transform: uppercase; color: var(--primary); }
+.dishbtn b { font: 800 15px/1.3 var(--head); overflow-wrap: anywhere; }
+.dishbtn .tags { font-size: 12px; color: var(--muted); }
+.dishrow .side { display: grid; justify-items: end; }
+.price { font: 800 14px var(--head); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.dishrow .side .price { padding-right: 12px; }
+.dishrow .acts { display: flex; }
+.parts { grid-column: 1 / -1; display: grid; gap: 6px; font-size: 13px; padding: 10px 10px 6px 0; border-top: 1.5px dashed color-mix(in srgb, var(--ink) 14%, transparent); margin-top: 8px; }
+.parts > span { display: flex; justify-content: space-between; gap: 12px; }
+.parts > span > span:last-child { white-space: nowrap; font-weight: 700; }
+.parts small { display: block; color: var(--ok-ink); font-weight: 700; }
+.parts .soft { margin-top: 6px; }
+
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chips.slide { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin: 0 -16px; padding: 2px 16px; }
 .chips.slide::-webkit-scrollbar { display: none; }
-.chips.slide .chip { flex: none; }
-.chip { border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 5px 11px; font-size: 13px; }
-.chip[aria-pressed=true] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
-.primary { background: var(--accent); color: var(--accent-ink); border: 0; border-radius: 10px; padding: 12px 16px; font-weight: 600; width: 100%; }
-.ghost { background: none; border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px; }
-.actions { display: flex; gap: 10px; flex-wrap: wrap; }
-.actions > * { flex: 1 1 150px; }
+.chip { height: 48px; padding: 0 18px; border-radius: 24px; border: 1.5px solid var(--line); background: var(--surface); font: 700 14px var(--body); white-space: nowrap; flex: none; }
+.chip[aria-pressed=true] { background: var(--lime); border-color: var(--lime); color: var(--lime-ink); font-weight: 800; }
+.chips.small .chip { height: 44px; padding: 0 14px; font-size: 13px; }
+.tag { display: inline-block; font: 700 11.5px/1.3 var(--body); padding: 3px 9px; border-radius: 999px; background: var(--t-lav); color: var(--lav-ink); white-space: nowrap; }
+.tag.good { background: var(--ok-bg); color: var(--ok-ink); }
+.tag svg.ic { width: 13px; height: 13px; stroke-width: 3; vertical-align: -2px; margin-right: 4px; display: inline-block; }
+.tag.warn { background: var(--warn-bg); color: var(--warn-ink); }
+.tagline { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
 
-.receipt { padding: 4px 16px 14px; }
-.day { display: grid; grid-template-columns: 2.4em minmax(0, 1fr) auto 30px 30px; align-items: center; gap: 6px; padding: 11px 0; border-bottom: 1px dashed var(--line); }
-.day .d { font: 600 12px var(--mono); color: var(--muted); text-transform: uppercase; }
-.dishbtn { background: none; border: 0; padding: 0; text-align: left; min-width: 0; }
-.dishbtn b { font-weight: 500; display: block; overflow-wrap: anywhere; }
-.tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 3px; }
-.tag { font-size: 11px; padding: 1px 7px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); white-space: nowrap; }
-.tag.good { background: var(--good-bg); color: var(--good); }
-.tag.warn { background: var(--warn-bg); color: var(--warn); }
-.price { font: 600 14px var(--mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
-.icon { width: 30px; height: 30px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); font-size: 15px; line-height: 1; padding: 0; display: grid; place-items: center; color: var(--muted); }
-.pick { width: 100%; box-sizing: border-box; margin-top: 8px; font: 400 14px var(--body); color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 8px; }
-.icon[aria-pressed=true] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
-.parts { grid-column: 2 / -1; font-size: 13px; color: var(--muted); display: grid; gap: 2px; padding-bottom: 2px; }
-.parts span { display: flex; justify-content: space-between; gap: 10px; }
-.total { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding-top: 12px; }
-.total .big { font: 700 20px var(--display); font-variant-numeric: tabular-nums; }
-.meter { height: 6px; border-radius: 3px; background: var(--line); margin-top: 8px; overflow: hidden; }
-.meter i { display: block; height: 100%; background: var(--accent); border-radius: 3px; }
-.note { color: var(--muted); font-size: 13px; margin: 8px 0 0; }
-.alert { background: var(--warn-bg); color: var(--warn); border-radius: 10px; padding: 10px 12px; font-size: 14px; }
-.alert.good { background: var(--good-bg); color: var(--good); border: 0; width: 100%; text-align: left; font: 500 14px/1.4 var(--body); }
-.acts { display: flex; gap: 6px; align-items: center; align-self: start; }
-.x { background: none; border: 0; color: var(--muted); font-size: 20px; line-height: 1; padding: 2px 6px; }
-.calc { display: grid; gap: 10px; }
-.calc .pair { display: grid; grid-template-columns: 1.4em minmax(0, 1fr) minmax(0, 1fr); gap: 8px; align-items: center; font-weight: 600; }
-.calc input, .calc select, .amount { width: 100%; min-width: 0; box-sizing: border-box; font: 400 16px var(--body); color: inherit; background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 9px 10px; }
+.field { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 48px; }
+.field > label, .field > span.name { font: 800 14px var(--head); }
+.switch { appearance: none; width: 52px; height: 30px; border-radius: 15px; background: color-mix(in srgb, var(--muted) 30%, var(--surface)); position: relative; cursor: pointer; transition: background .15s; margin: 0; flex: none; }
+.switch::after { content: ""; position: absolute; top: 3px; left: 3px; width: 24px; height: 24px; border-radius: 50%; background: var(--surface); transition: transform .15s; }
+.switch:checked { background: var(--primary); }
+.switch:checked::after { transform: translateX(22px); }
+.money { display: flex; align-items: center; gap: 6px; font: 800 16px var(--head); }
+.money input, .amount, .calc input, .calc select, .search { font: 700 16px var(--body); color: inherit; background: var(--bg); border: 1.5px solid var(--line); border-radius: 14px; padding: 10px 12px; min-width: 0; }
+.money input { width: 7ch; text-align: right; font: 800 16px var(--head); }
+input[type=range] { width: 100%; accent-color: var(--primary); }
+.stepper { display: flex; align-items: center; gap: 12px; font: 800 16px var(--head); }
+.round { width: 48px; height: 48px; border-radius: 50%; border: 1.5px solid var(--line); background: var(--surface); display: grid; place-items: center; flex: none; }
+.round svg.ic { width: 18px; height: 18px; }
+details > summary { cursor: pointer; list-style: none; display: flex; justify-content: space-between; align-items: center; gap: 12px; min-height: 48px; font: 800 14px var(--head); }
+details > summary::-webkit-details-marker { display: none; }
+details > summary .count { font: 600 13px var(--body); color: var(--muted); }
+details .chips { margin: 4px 0 8px; }
+.settings { display: grid; gap: 4px; }
+.search { width: 100%; height: 52px; border-radius: 26px; padding: 0 20px; background: var(--surface); }
 
-.row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 12px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+.promo { display: grid; gap: 12px; }
+.phead { display: flex; align-items: center; gap: 14px; }
+.pname { font: 800 16px/1.3 var(--head); overflow-wrap: anywhere; }
+.pmeta { color: var(--muted); font-size: 13px; margin-top: -4px; }
+.pmeta b { color: var(--ink); font-weight: 800; }
+.pprice { display: flex; align-items: baseline; gap: 10px; }
+.pprice s { color: var(--muted); font-size: 13px; }
+.badge { margin-left: auto; align-self: center; background: var(--peach); color: var(--peach-ink); font: 800 14px var(--head); padding: 7px 12px; border-radius: 13px; transform: rotate(4deg); }
+.strip { border-radius: 14px; padding: 10px 14px; font: 700 13px/1.35 var(--body); display: flex; gap: 8px; align-items: flex-start; background: var(--t-lav); color: var(--lav-ink); }
+.strip.ok { background: var(--ok-bg); color: var(--ok-ink); }
+.strip.warn { background: var(--warn-bg); color: var(--warn-ink); }
+.strip svg.ic { width: 16px; height: 16px; stroke-width: 2.6; margin-top: 1px; }
+.pmini { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 12px; align-items: center; padding: 14px 18px; border-bottom: 1.5px dashed var(--line); }
+.pmini:last-child { border-bottom: 0; }
+.pmini b { font: 800 14px/1.3 var(--head); overflow-wrap: anywhere; }
+.pmini small { color: var(--muted); font-size: 12px; grid-column: 1; }
+.pmini .right { grid-row: 1 / span 2; grid-column: 2; display: grid; justify-items: end; gap: 2px; }
+.pmini .badge { font-size: 12px; padding: 3px 8px; border-radius: 9px; margin: 0; transform: none; }
+
+.row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 12px; align-items: center; padding: 14px 18px; border-bottom: 1.5px dashed var(--line); }
 .row:last-child { border-bottom: 0; }
-.row .who { font-weight: 600; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; min-width: 0; overflow-wrap: anywhere; }
-.row .why { grid-column: 1 / -1; color: var(--muted); font-size: 13px; overflow-wrap: anywhere; }
-.row.partial .price { color: var(--muted); font-weight: 400; }
-.item { display: grid; grid-template-columns: 26px minmax(0, 1fr) auto; gap: 2px 10px; padding: 9px 0; border-bottom: 1px solid var(--line); font-size: 14px; align-items: center; }
-.item:last-child { border-bottom: 0; }
-.item input[type=checkbox] { width: 20px; height: 20px; accent-color: var(--accent); margin: 0; }
-.item .q { font: 400 13px var(--mono); white-space: nowrap; display: flex; align-items: center; gap: 6px; }
-.item .w { grid-column: 2 / -1; color: var(--muted); font-size: 12px; overflow-wrap: anywhere; }
-.item.done span.n { text-decoration: line-through; color: var(--muted); }
-.item.home { color: var(--muted); }
-.dish { display: grid; grid-template-columns: 30px minmax(0, 1fr) auto; gap: 6px 8px; align-items: start; padding: 11px 0; border-bottom: 1px solid var(--line); }
-.dish:last-child { border-bottom: 0; }
-.dish .price { padding-top: 5px; }
-.dish .dishbtn { padding-top: 4px; }
-.dish .meta { grid-column: 2 / -1; display: flex; align-items: center; justify-content: space-between; gap: 8px; color: var(--muted); font-size: 12.5px; }
-.dish .parts { grid-column: 2 / -1; }
-.pickhead { position: sticky; top: 0; z-index: 4; background: var(--bg); padding: 10px 0; margin: -10px 0; }
-.week { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; margin-top: 10px; }
-.week button { border: 1px solid var(--line); background: var(--surface); border-radius: 10px; padding: 7px 0 6px; font: 600 12px var(--mono); text-transform: uppercase; color: var(--muted); display: grid; gap: 4px; justify-items: center; }
+.row .who { font: 800 14.5px/1.3 var(--head); overflow-wrap: anywhere; display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: center; }
+.row .who small { font: 600 12px var(--body); color: var(--muted); }
+.row .why { grid-column: 1 / -1; color: var(--muted); font-size: 12.5px; overflow-wrap: anywhere; }
+.row.partial .price { color: var(--muted); }
+.row .acts { display: flex; align-items: center; gap: 2px; }
+.grid4 { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; margin: 4px 0; }
+.cell { background: var(--bg); border: 1.5px solid var(--line); border-radius: 14px; padding: 8px 2px; text-align: center; font-size: 11px; color: var(--muted); overflow: hidden; }
+.cell b { display: block; font: 800 14px var(--head); color: var(--ink); font-variant-numeric: tabular-nums; }
+.cell.min { background: var(--lime); border-color: var(--lime); color: var(--lime-ink); }
+.cell.min b { color: var(--lime-ink); }
+.rowfoot { grid-column: 1 / -1; display: flex; gap: 10px; align-items: center; justify-content: space-between; }
+.rowfoot .why { flex: 1; min-width: 0; }
+
+.best { background: var(--lime); color: var(--lime-ink); border-radius: 26px; padding: 20px; position: relative; }
+.best .store { font: 800 22px/1.2 var(--head); margin: 12px 0 4px; }
+.best .bigprice span { font-size: 13px; }
+.best .link { color: var(--lime-ink); margin-bottom: -12px; }
+.best .tick { position: absolute; right: 20px; top: 44px; width: 40px; height: 40px; border-radius: 50%; background: #fff; color: #2F3B10; display: grid; place-items: center; }
+.best.none { background: var(--warn-bg); color: var(--warn-ink); }
+.best.none .link { color: var(--warn-ink); }
+
+.cb { appearance: none; width: 26px; height: 26px; border-radius: 9px; border: 2px solid color-mix(in srgb, var(--muted) 45%, var(--surface)); background: var(--surface); display: grid; place-content: center; margin: 0; flex: none; cursor: pointer; }
+.cb:checked { background: var(--primary); border-color: var(--primary); }
+.cb:checked::after { content: ""; width: 12px; height: 7px; border-left: 2.6px solid var(--on-primary); border-bottom: 2.6px solid var(--on-primary); transform: rotate(-45deg) translate(1px, -1px); }
+.lrow { display: grid; grid-template-columns: 26px minmax(0, 1fr) auto; gap: 2px 14px; align-items: start; padding: 15px 18px; border-bottom: 1.5px dashed var(--line); cursor: pointer; }
+.lrow:last-child { border-bottom: 0; }
+.lrow b { font: 800 14.5px/1.3 var(--head); }
+.lrow small { display: block; color: var(--muted); font-size: 12.5px; overflow-wrap: anywhere; }
+.lrow .qty { font: 800 13px var(--head); white-space: nowrap; padding-top: 2px; }
+.lrow.done b { text-decoration: line-through; color: var(--muted); }
+.lrow.home { cursor: default; color: var(--muted); }
+.ownrow { display: flex; align-items: center; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+.mini { border: 1.5px solid var(--line); background: var(--surface); border-radius: 999px; height: 48px; padding: 0 14px; font: 700 12.5px var(--body); color: var(--muted); }
+.mini[aria-pressed=true] { background: var(--lime); border-color: var(--lime); color: var(--lime-ink); }
+.srow { display: grid; grid-template-columns: 34px minmax(0, 1fr) auto; gap: 14px; align-items: center; min-height: 68px; padding: 12px 18px; border-bottom: 1.5px dashed var(--line); cursor: pointer; }
+.srow:last-child { border-bottom: 0; }
+.srow .cb { width: 34px; height: 34px; border-radius: 11px; }
+.srow .cb:checked::after { width: 15px; height: 9px; }
+.srow b { font: 800 18px/1.25 var(--head); }
+.srow .qty { font: 800 15px var(--head); white-space: nowrap; }
+.srow.done b, .srow.done .qty { text-decoration: line-through; color: var(--muted); }
+
+.pickhead { position: sticky; top: 0; z-index: 4; background: var(--bg); padding: 8px 0 10px; margin: -8px 0 -10px; }
+.week { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 5px; }
+.week button { border: 1.5px solid var(--line); background: var(--surface); border-radius: 16px; height: 52px; font: 800 11px var(--body); letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted); display: grid; gap: 4px; place-content: center; justify-items: center; }
 .week button i { width: 6px; height: 6px; border-radius: 50%; background: var(--line); }
-.week button.mine i { background: var(--accent); }
-.week button[aria-pressed=true] { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
-.mini { border: 1px solid var(--line); background: none; border-radius: 999px; padding: 1px 8px; font-size: 12px; color: var(--muted); }
-.mini[aria-pressed=true] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+.week button.mine i { background: var(--primary); }
+.week button[aria-pressed=true] { background: var(--lime); border-color: var(--lime); color: var(--lime-ink); }
+.dish { display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; gap: 4px 6px; align-items: center; padding: 12px 18px 12px 8px; border-bottom: 1.5px dashed var(--line); }
+.dish:last-child { border-bottom: 0; }
+.dish .meta { grid-column: 2 / -1; display: flex; align-items: center; justify-content: space-between; gap: 10px; color: var(--muted); font-size: 12.5px; }
+.dish .parts { grid-column: 2 / -1; }
 
-.promo { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 12px; padding: 12px 0; border-bottom: 1px solid var(--line); }
-.promo:last-child { border-bottom: 0; }
-.promo .n { font-weight: 500; overflow-wrap: anywhere; }
-.promo .m { color: var(--muted); font-size: 12.5px; }
-.promo .p { text-align: right; }
-.promo .p b { font: 600 16px var(--mono); display: block; white-space: nowrap; }
-.promo .p s { color: var(--muted); font: 400 12px var(--mono); }
-.promo .p em { font: 600 12px var(--mono); font-style: normal; color: var(--good); margin-left: 6px; }
-.promo .tags { grid-column: 1 / -1; margin-top: 0; align-items: center; }
-.promo .tags .add { margin-left: auto; }
-.search { width: 100%; box-sizing: border-box; font: 400 16px var(--body); color: inherit; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; }
-.grid4 { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; margin-top: 4px; }
-.cell { background: var(--bg); border-radius: 8px; padding: 6px 4px; text-align: center; font-size: 11px; color: var(--muted); }
-.cell b { display: block; font: 600 13px var(--mono); color: var(--ink); }
-.cell.min { background: var(--good-bg); color: var(--good); }
-.cell.min b { color: var(--good); }
-.add { align-self: start; border: 1px solid var(--accent); color: var(--accent); background: none; border-radius: 8px; padding: 4px 10px; font-size: 13px; white-space: nowrap; }
+.calc { display: grid; gap: 10px; }
+.calc .pair { display: grid; grid-template-columns: 1.4em minmax(0, 1fr) minmax(0, 1fr); gap: 8px; align-items: center; font: 800 15px var(--head); }
+.calc input, .calc select, .amount { width: 100%; height: 48px; }
+.x { background: none; border: 0; color: var(--muted); width: 48px; height: 48px; display: grid; place-items: center; }
+.x svg.ic { width: 18px; height: 18px; }
+.srec { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 8px; align-items: center; padding: 4px 0; }
 
-nav.tabs { position: fixed; left: 0; right: 0; bottom: 0; z-index: 5; background: var(--surface); border-top: 1px solid var(--line); display: flex; justify-content: center; gap: 4px;
-  padding: 6px max(8px, env(safe-area-inset-right, 0px)) calc(6px + env(safe-area-inset-bottom, 0px)) max(8px, env(safe-area-inset-left, 0px)); }
-nav.tabs button { flex: 1; max-width: 110px; background: none; border: 0; padding: 9px 2px; border-radius: 10px; font-size: 13.5px; color: var(--muted); }
-nav.tabs button[aria-current=page] { color: var(--accent); background: var(--accent-soft); font-weight: 600; }
-footer { color: var(--muted); font-size: 12.5px; line-height: 1.5; }
+.actionbar { position: fixed; left: 0; right: 0; bottom: calc(76px + env(safe-area-inset-bottom, 0px)); z-index: 6; height: 74px; background: var(--bg); border-top: 1.5px solid var(--line);
+  padding: 0 max(16px, env(safe-area-inset-right, 0px)) 0 max(16px, env(safe-area-inset-left, 0px)); }
+.actionbar > div { max-width: 480px; margin: 0 auto; height: 100%; display: flex; align-items: center; gap: 12px; }
+.actionbar .roundbtn { width: 52px; height: 52px; }
+nav.tabs { position: fixed; left: 0; right: 0; bottom: 0; z-index: 6; background: var(--bg); height: calc(76px + env(safe-area-inset-bottom, 0px)); padding: 8px max(8px, env(safe-area-inset-right, 0px)) env(safe-area-inset-bottom, 0px) max(8px, env(safe-area-inset-left, 0px)); }
+nav.tabs > div { max-width: 480px; margin: 0 auto; display: flex; }
+nav.tabs button { flex: 1; background: none; border: 0; padding: 0; height: 62px; display: grid; justify-items: center; align-content: center; gap: 4px; font: 700 11.5px var(--body); color: var(--muted); }
+nav.tabs button span { width: 54px; height: 32px; border-radius: 16px; display: grid; place-items: center; }
+nav.tabs button[aria-current=page] { color: var(--ink); font-weight: 800; }
+nav.tabs button[aria-current=page] span { background: var(--lime); color: var(--lime-ink); }
+body.noaction nav.tabs { border-top: 1.5px solid var(--line); }
+.toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(76px + 74px + 14px + env(safe-area-inset-bottom, 0px)); z-index: 7; background: var(--ink); color: var(--bg); border-radius: 999px; padding: 10px 18px; font: 700 13px var(--body); max-width: calc(100% - 32px); text-align: center; }
+footer { color: var(--muted); font-size: 12.5px; line-height: 1.5; max-width: 480px; margin: 24px auto 0; }
 @media (prefers-reduced-motion: reduce) { .switch, .switch::after { transition: none; } }
 </style>
 
-<main>
-  <div class="top"><h1>My Shopping</h1><span class="stamp" id="stamp"></span></div>
+<header class="appbar">
+  <span class="logo" id="logo"></span>
+  <span class="name"><b>My Shopping</b><small id="stamp"></small></span>
+  <button class="roundbtn" id="settingsBtn" aria-label="Поставки" aria-pressed="false"></button>
+</header>
 
+<main>
   <div class="view" id="view-menu">
-    <button class="alert good" id="news" data-go="tools" hidden></button>
-    <section class="panel controls" aria-label="Поставки">
+    <h1 id="weekTitle">Мени за неделата</h1>
+    <button class="banner good" id="news" data-go="tools" hidden></button>
+    <div class="banner warn" id="alert" hidden></div>
+    <section class="budget" id="budgetCard"></section>
+    <section class="card settings" id="settings" aria-label="Поставки" hidden>
       <div>
         <div class="field"><label for="budget">Буџет за неделата</label><span class="money"><input id="budget" type="number" inputmode="numeric" min="300" max="6000" step="50"> ден.</span></div>
         <input id="budgetRange" type="range" min="400" max="4000" step="50" aria-label="Буџет">
       </div>
-      <div class="field"><span class="name">Членови</span><span class="stepper"><button class="round" id="less" aria-label="Помалку членови">−</button><span id="people"></span><button class="round" id="more" aria-label="Повеќе членови">+</button></span></div>
+      <div class="field"><span class="name">Членови</span><span class="stepper"><button class="round" id="less" aria-label="Помалку членови"></button><span id="people"></span><button class="round" id="more" aria-label="Повеќе членови"></button></span></div>
       <div class="field"><label for="fasting">Посно во среда и петок</label><input class="switch" id="fasting" type="checkbox"></div>
       <div class="field"><label for="thrifty">Штедливо мени</label><input class="switch" id="thrifty" type="checkbox"></div>
-      <details id="cardBox"><summary><span>Картички за попуст</span><span class="count" id="cardCount"></span></summary><div class="chips" id="cards"></div><p class="note">Означи кај кои маркети имаш картичка. Кај другите, цените со картичка не се бројат.</p></details>
-      <details id="favBox"><summary><span>Омилени јадења</span><span class="count" id="favCount"></span></summary><div class="chips" id="favs"></div></details>
+      <div class="field"><label for="dark">Темен изглед (пробно)</label><input class="switch" id="dark" type="checkbox"></div>
+      <details id="cardBox"><summary><span>Картички за попуст</span><span class="count" id="cardCount"></span></summary><div class="chips small" id="cards"></div><p class="note">Означи кај кои маркети имаш картичка. Кај другите, цените со картичка не се бројат.</p></details>
+      <details id="favBox"><summary><span>Омилени јадења</span><span class="count" id="favCount"></span></summary><div class="chips small" id="favs"></div></details>
     </section>
-    <section>
-      <div class="top" style="margin-bottom:10px"><h2 id="weekTitle" style="margin:0">Мени за неделата</h2><button class="add" data-go="dishes">Избери јадења сам</button></div>
-      <div id="alert" class="alert" hidden></div>
-      <div class="panel receipt" id="menu"></div>
-      <p class="note" id="menuHint">Допри јадење за состојките. ↻ дава нов предлог, катанецот го задржува јадењето за тој ден, а со „Избери јадења сам" ги бираш од листата.</p>
-    </section>
-    <section class="panel" id="menuStore"></section>
-    <section><h2>Акции што вредат</h2><div class="panel" id="teaser"></div></section>
-    <div class="actions"><button class="primary" id="next">Следна недела</button><button class="ghost" id="reset">Почни одново</button></div>
-  </div>
-
-  <div class="view" id="view-promos" hidden>
-    <section>
-      <h2>Акции во сите маркети</h2>
-      <p class="note" id="promoStats" style="margin:0 0 12px"></p>
-      <div class="chips" id="promoChains"></div>
-      <div class="chips slide" id="promoGroups" style="margin-top:8px"></div>
-      <div class="panel controls" style="margin-top:12px">
-        <div class="field"><label for="onlyBest">Само најевтини во градот</label><input class="switch" id="onlyBest" type="checkbox"></div>
-        <div class="field"><label for="noCard">Без картичка</label><input class="switch" id="noCard" type="checkbox"></div>
-      </div>
-    </section>
-    <section class="panel" id="promoList"></section>
-    <button class="ghost" id="morePromos">Прикажи уште</button>
-  </div>
-
-  <div class="view" id="view-prices" hidden>
-    <section>
-      <h2>Каде е најевтино</h2>
-      <input class="search" id="q" type="search" placeholder="млеко, масло, брилијант, пелени…" autocomplete="off">
-      <div class="chips slide" id="groupChips" style="margin-top:10px"></div>
-    </section>
-    <section class="panel" id="needResults"></section>
-    <section id="productBox" hidden><h2>Производи</h2><div class="panel" id="productResults"></div></section>
-    <section id="sameBox"><h2>Ист производ, различна цена</h2><div class="panel" id="sameResults"></div></section>
-  </div>
-
-  <div class="view" id="view-list" hidden>
-    <section><h2>Каде да купам</h2><div class="panel" id="stores"></div></section>
-    <section>
-      <h2 id="listTitle">Листа за пазарење</h2>
-      <div class="panel" id="items"></div>
-      <div class="actions" style="margin-top:12px"><button class="primary" id="copy">Копирај ја листата</button><button class="ghost" id="clearDone">Одштиклирај сè</button></div>
-      <p class="note" id="copied" hidden>Листата е копирана. Залепи ја во порака.</p>
-      <textarea id="copyText" hidden rows="8" style="width:100%;box-sizing:border-box;margin-top:10px;font:13px var(--mono);background:var(--surface);color:inherit;border:1px solid var(--line);border-radius:10px;padding:10px"></textarea>
-    </section>
-    <section class="panel" id="regular"></section>
-    <section class="panel" id="pantry"></section>
+    <div class="seclabel"><span class="cap" id="menuCap"></span><button class="link" id="editBudget">Измени буџет</button></div>
+    <div class="stack" id="menu"></div>
+    <button class="soft wide" data-go="dishes">Избери јадења сам</button>
+    <p class="note">Допри јадење за состојките. Стрелките даваат нов предлог, а катанецот го задржува јадењето за тој ден.</p>
+    <section class="card" id="menuStore"></section>
+    <div class="seclabel"><span class="cap">Акции што вредат</span><button class="link" data-go="promos">Сите акции</button></div>
+    <section class="card flush" id="teaser"></section>
+    <button class="ghost wide" id="reset">Почни одново</button>
   </div>
 
   <div class="view" id="view-dishes" hidden>
-    <section class="pickhead">
-      <div class="top"><h2 style="margin:0">Избери јадења за неделата</h2><button class="add" data-go="menu">Готово</button></div>
-      <div class="week" id="weekStrip"></div>
-    </section>
-    <p class="note" id="pickHint" style="margin:0"></p>
-    <section>
-      <input class="search" id="dq" type="search" placeholder="барај јадење…" autocomplete="off" aria-label="Барај јадење">
-      <div class="chips slide" id="kindChips" style="margin-top:10px"></div>
-    </section>
-    <section class="panel" id="dishList"></section>
+    <h1>Избери јадења</h1>
+    <section class="pickhead"><div class="week" id="weekStrip"></div></section>
+    <div><p class="note" id="pickHint"></p><button class="link" id="clearPicks" hidden>Откажи ги моите избори</button></div>
+    <input class="search" id="dq" type="search" placeholder="барај јадење…" autocomplete="off" aria-label="Барај јадење">
+    <div class="chips slide" id="kindChips"></div>
+    <section class="card flush" id="dishList"></section>
+  </div>
+
+  <div class="view" id="view-promos" hidden>
+    <h1>Акции што вредат</h1>
+    <p class="sub" id="promoStats"></p>
+    <div class="chips slide" id="promoChains"></div>
+    <div class="chips slide small" id="promoGroups"></div>
+    <div>
+      <div class="field"><label for="onlyBest">Само најевтини во градот</label><input class="switch" id="onlyBest" type="checkbox"></div>
+      <div class="field"><label for="noCard">Без картичка</label><input class="switch" id="noCard" type="checkbox"></div>
+    </div>
+    <div class="stack" id="promoList"></div>
+    <button class="ghost wide" id="morePromos">Прикажи уште</button>
+  </div>
+
+  <div class="view" id="view-prices" hidden>
+    <h1>Каде е најевтино</h1>
+    <p class="sub">Најниската цена по единица кај секој маркет</p>
+    <input class="search" id="q" type="search" placeholder="млеко, масло, пелени…" autocomplete="off" aria-label="Барај производ">
+    <div class="chips slide small" id="groupChips"></div>
+    <section class="card flush" id="needResults"></section>
+    <div id="productBox" hidden><div class="seclabel"><span class="cap">Производи</span></div><section class="card flush" id="productResults"></section></div>
+    <div id="sameBox"><div class="seclabel"><span class="cap">Ист производ, различна цена</span></div><section class="card flush" id="sameResults"></section></div>
+  </div>
+
+  <div class="view" id="view-list" hidden>
+    <h1>Листа за пазарење</h1>
+    <p class="sub" id="listSub"></p>
+    <section id="bestStore"></section>
+    <section class="card flush" id="stores" hidden></section>
+    <div class="stack" id="items" style="gap:8px"></div>
+    <textarea id="copyText" hidden rows="8" aria-label="Листата како текст" style="width:100%;font:600 13px var(--body);background:var(--surface);color:inherit;border:1.5px solid var(--line);border-radius:16px;padding:12px"></textarea>
+    <button class="ghost wide" id="clearDone">Одштиклирај сè</button>
+    <section class="card" id="regular"></section>
+    <section class="card" id="pantry"></section>
+  </div>
+
+  <div class="view" id="view-store" hidden>
+    <h1>Во маркет</h1>
+    <p class="sub" id="storeSub"></p>
+    <div class="meter full" id="storeMeter"><i></i></div>
+    <section class="card flush" id="storeItems"></section>
   </div>
 
   <div class="view" id="view-tools" hidden>
-    <section id="changesBox" hidden><h2 id="changesTitle"></h2><div class="panel" id="changesList"></div></section>
-    <section><h2>Следам цена</h2><div class="panel" id="watchList"></div></section>
-    <section>
+    <h1>Алатки</h1>
+    <div id="changesBox" hidden><div class="seclabel"><span class="cap" id="changesTitle"></span></div><section class="card flush" id="changesList"></section></div>
+    <section class="card"><h2>Следам цена</h2><div id="watchList"></div></section>
+    <section class="card">
       <h2>Што да зготвам со тоа што имам</h2>
-      <div class="panel">
-        <details id="haveBox"><summary><span>Што имам дома</span><span class="count" id="haveCount"></span></summary><div class="chips" id="haveChips"></div></details>
-        <div id="cookResults" style="margin-top:10px"></div>
-      </div>
+      <details id="haveBox"><summary><span>Што имам дома</span><span class="count" id="haveCount"></span></summary><div class="chips small" id="haveChips"></div></details>
+      <div id="cookResults"></div>
     </section>
-    <section>
-      <h2>Кое пакување се исплати</h2>
-      <div class="panel calc">
-        <div class="pair"><span>А</span><input id="caP" type="number" inputmode="decimal" placeholder="цена, ден." aria-label="Цена на пакување А"><input id="caQ" type="number" inputmode="decimal" placeholder="количина" aria-label="Количина во пакување А"></div>
-        <div class="pair"><span>Б</span><input id="cbP" type="number" inputmode="decimal" placeholder="цена, ден." aria-label="Цена на пакување Б"><input id="cbQ" type="number" inputmode="decimal" placeholder="количина" aria-label="Количина во пакување Б"></div>
-        <select id="calcUnit" aria-label="Мерка на количината"><option value="г">количината е во грами</option><option value="мл">количината е во милилитри</option><option value="парче">количината е во парчиња</option></select>
-        <p class="note" id="calcOut" style="margin:0">Внеси цена и количина за две пакувања.</p>
-      </div>
+    <section class="card calc">
+      <h2 style="margin:0">Кое пакување се исплати</h2>
+      <div class="pair"><span>А</span><input id="caP" type="number" inputmode="decimal" placeholder="цена, ден." aria-label="Цена на пакување А"><input id="caQ" type="number" inputmode="decimal" placeholder="количина" aria-label="Количина во пакување А"></div>
+      <div class="pair"><span>Б</span><input id="cbP" type="number" inputmode="decimal" placeholder="цена, ден." aria-label="Цена на пакување Б"><input id="cbQ" type="number" inputmode="decimal" placeholder="количина" aria-label="Количина во пакување Б"></div>
+      <select id="calcUnit" aria-label="Мерка на количината"><option value="г">количината е во грами</option><option value="мл">количината е во милилитри</option><option value="парче">количината е во парчиња</option></select>
+      <p class="note" id="calcOut">Внеси цена и количина за две пакувања.</p>
     </section>
-    <section>
+    <section class="card">
       <h2>Колку потрошив</h2>
-      <div class="panel">
-        <div class="field"><input class="amount" id="spentIn" type="number" inputmode="decimal" placeholder="износ од сметката, ден." aria-label="Износ од сметката"><button class="ghost" id="spentAdd" style="flex:none">Запиши</button></div>
-        <div id="spentList" style="margin-top:10px"></div>
-      </div>
+      <div class="field"><input class="amount" id="spentIn" type="number" inputmode="decimal" placeholder="износ од сметката, ден." aria-label="Износ од сметката" style="flex:1;height:48px"><button class="soft small" id="spentAdd">Запиши</button></div>
+      <div id="spentList" style="margin-top:8px"></div>
     </section>
   </div>
-
-  <footer>
-    Прототип. Цените и акциите се од ценовниците на маркетите; менито и листата ги пресметува апликацијата. Се брои едно главно јадење дневно, а количините во јадењата се прва проценка.
-    „На каса" значи цели пакувања, па дел останува дома за следната недела.
-  </footer>
 </main>
 
-<nav class="tabs" aria-label="Делови">
-  <button data-tab="menu">Мени</button><button data-tab="promos">Акции</button><button data-tab="prices">Цени</button><button data-tab="list">Листа</button><button data-tab="tools">Алатки</button>
-</nav>
+<footer>
+  Прототип. Цените и акциите се од ценовниците на маркетите; менито и листата ги пресметува апликацијата. Се брои едно главно јадење дневно, а количините во јадењата се прва проценка.
+  Цената на јадење е заокружена на цел денар, а збирот на менито е збир на тие цени. „На каса" значи цели пакувања, па дел останува дома за следната недела.
+</footer>
+
+<div class="toast" id="toast" role="status" hidden></div>
+<div class="actionbar" id="actionbar"><div></div></div>
+<nav class="tabs" aria-label="Делови"><div id="tabs"></div></nav>
 
 <script type="application/json" id="data">/*DATA*/</script>
 <script>
@@ -266,7 +365,8 @@ const DAYS = ["пон", "вто", "сре", "чет", "пет", "саб", "не�
 const DEFAULT_FAVS = ["Грав со колбас", "Ориз со пилешки копан", "Сарма", "Манџа грашок со пилешко", "Леќа чорба", "Пире со ќофтиња"];
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
-const den = n => (Math.round(n * 10) / 10 >= 100 ? Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".") : String(Math.round(n * 10) / 10).replace(".", ",")) + " ден.";
+const thousands = n => Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+const den = n => (Math.round(n * 10) / 10 >= 100 ? thousands(n) : String(Math.round(n * 10) / 10).replace(".", ",")) + " ден.";
 const num = n => String(Math.round(n * 100) / 100).replace(".", ",");
 function amount(q, unit) {
   if (unit === "кг") return q < 1 ? Math.round(q * 1000) + " г" : num(q) + " кг";
@@ -275,9 +375,59 @@ function amount(q, unit) {
   return num(Math.ceil(q - 1e-9)) + " парч.";
 }
 const lower = s => s.toLowerCase();
+const nice = s => { s = String(s).toLowerCase(); return s.charAt(0).toUpperCase() + s.slice(1); };       // ценовниците пишуваат со големи букви
 const dm = day => day.slice(8) + "." + day.slice(5, 7) + ".";
 const when = span => { const [a, b] = (span || "/").split("/"); return b ? (a ? "од " + dm(a) + " " : "") + "до " + dm(b) : "без наведен рок"; };      // „од 11.11. до 24.11."
-const LOCK = '<svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><rect x="3" y="7" width="10" height="7" rx="1.5" fill="currentColor"/><path d="M5 7V5a3 3 0 0 1 6 0v2" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>';
+
+// --- икони: линиски, 24 × 24, од збирката Lucide (лиценца ISC, текстот е во LICENSE-icons.txt); кошничката во знакот е наша
+const PATHS = {
+  calendar: '<path d="M8 2v3"/><path d="M16 2v3"/><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M8 13h.01"/><path d="M12 13h.01"/><path d="M16 13h.01"/><path d="M8 17h.01"/><path d="M12 17h.01"/><path d="M16 17h.01"/>',
+  tag: '<path d="M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.42 0l6.58-6.58a2.426 2.426 0 0 0 0-3.42z"/><circle cx="7.5" cy="7.5" r=".5" fill="currentColor"/>',
+  search: '<path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/>',
+  list: '<path d="M13 5h8"/><path d="M13 12h8"/><path d="M13 19h8"/><path d="m3 17 2 2 4-4"/><path d="m3 7 2 2 4-4"/>',
+  sliders: '<path d="M10 5H3"/><path d="M12 19H3"/><path d="M14 3v4"/><path d="M16 17v4"/><path d="M21 12h-9"/><path d="M21 19h-5"/><path d="M21 5h-7"/><path d="M8 10v4"/><path d="M8 12H3"/>',
+  refresh: '<path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/>',
+  lock: '<rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>',
+  heart: '<path d="M2 9.5a5.5 5.5 0 0 1 9.591-3.676.56.56 0 0 0 .818 0A5.49 5.49 0 0 1 22 9.5c0 2.29-1.5 4-3 5.5l-5.492 5.313a2 2 0 0 1-3 .019L5 15c-1.5-1.5-3-3.2-3-5.5"/>',
+  star: '<path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"/>',
+  copy: '<rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>',
+  check: '<path d="M20 6 9 17l-5-5"/>',
+  arrow: '<path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>',
+  plus: '<path d="M5 12h14"/><path d="M12 5v14"/>',
+  minus: '<path d="M5 12h14"/>',
+  x: '<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',
+  pot: '<path d="M2 12h20"/><path d="M20 12v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-8"/><path d="m4 8 16-4"/><path d="m8.86 6.78-.45-1.81a2 2 0 0 1 1.45-2.43l1.94-.48a2 2 0 0 1 2.43 1.46l.45 1.8"/>',
+  leaf: '<path d="M11 20a10 10 0 0010-10 25.9 25.9 0 00-1.04-7.281 1 1 0 00-1.755-.325C15.833 5.5 13 5.5 9.8 6.1A7 7 0 0011 20"/><path d="M2 21a5 5 0 012.911-4.544C7.613 15.212 8.351 15.24 11 13"/>',
+  drumstick: '<path d="M15.4 15.63a7.875 6 135 1 1 6.23-6.23 4.5 3.43 135 0 0-6.23 6.23"/><path d="m8.29 12.71-2.6 2.6a2.5 2.5 0 1 0-1.65 4.65A2.5 2.5 0 1 0 8.7 18.3l2.59-2.59"/>',
+  beef: '<path d="M16.4 13.7A6.5 6.5 0 1 0 6.28 6.6c-1.1 3.13-.78 3.9-3.18 6.08A3 3 0 0 0 5 18c4 0 8.4-1.8 11.4-4.3"/><path d="m18.5 6 1.754 3.5a6.48 6.48 0 0 1-1.854 8.2C15.4 20.2 11 22 7 22a3 3 0 0 1-2.68-1.66L2.4 16.5"/><circle cx="12.5" cy="8.5" r="2.5"/>',
+  ham: '<path d="M13.144 21.144A7.274 10.445 45 1 0 2.856 10.856"/><path d="M13.144 21.144A7.274 4.365 45 0 0 2.856 10.856a7.274 4.365 45 0 0 10.288 10.288"/><path d="M16.565 10.435 18.6 8.4a2.501 2.501 0 1 0 1.65-4.65 2.5 2.5 0 1 0-4.66 1.66l-2.024 2.025"/><path d="m8.5 16.5-1-1"/>',
+  fish: '<path d="M6.5 12c.94-3.46 4.94-6 8.5-6 3.56 0 6.06 2.54 7 6-.94 3.47-3.44 6-7 6s-7.56-2.53-8.5-6Z"/><path d="M18 12v.5"/><path d="M16 17.93a9.77 9.77 0 0 1 0-11.86"/><path d="M7 10.67C7 8 5.58 5.97 2.73 5.5c-1 1.5-1 5 .23 6.5-1.24 1.5-1.24 5-.23 6.5C5.58 18.03 7 16 7 13.33"/><path d="M10.46 7.26C10.2 5.88 9.17 4.24 8 3h5.8a2 2 0 0 1 1.98 1.67l.23 1.4"/><path d="m16.01 17.93-.23 1.4A2 2 0 0 1 13.8 21H9.5a5.96 5.96 0 0 0 1.49-3.98"/>',
+  egg: '<path d="M12 2C8 2 4 8 4 14a8 8 0 0 0 16 0c0-6-4-12-8-12"/>',
+  loaf: '<path d="M10.2 18H4.774a1.5 1.5 0 0 1-1.352-.97 11 11 0 0 1 .132-6.487"/><path d="M18 10.2V4.774a1.5 1.5 0 0 0-.97-1.352 11 11 0 0 0-6.486.132"/><path d="M18 5a4 3 0 0 1 4 3 2 2 0 0 1-2 2 10 10 0 0 0-5.139 1.42"/><path d="M5 18a3 4 0 0 0 3 4 2 2 0 0 0 2-2 10 10 0 0 1 1.42-5.14"/><path d="M8.709 2.554a10 10 0 0 0-6.155 6.155 1.5 1.5 0 0 0 .676 1.626l9.807 5.42a2 2 0 0 0 2.718-2.718l-5.42-9.807a1.5 1.5 0 0 0-1.626-.676"/>',
+  wheat: '<path d="M2 22 16 8"/><path d="M3.47 12.53 5 11l1.53 1.53a3.5 3.5 0 0 1 0 4.94L5 19l-1.53-1.53a3.5 3.5 0 0 1 0-4.94Z"/><path d="M7.47 8.53 9 7l1.53 1.53a3.5 3.5 0 0 1 0 4.94L9 15l-1.53-1.53a3.5 3.5 0 0 1 0-4.94Z"/><path d="M11.47 4.53 13 3l1.53 1.53a3.5 3.5 0 0 1 0 4.94L13 11l-1.53-1.53a3.5 3.5 0 0 1 0-4.94Z"/><path d="M20 2h2v2a4 4 0 0 1-4 4h-2V6a4 4 0 0 1 4-4Z"/><path d="M11.47 17.47 13 19l-1.53 1.53a3.5 3.5 0 0 1-4.94 0L5 19l1.53-1.53a3.5 3.5 0 0 1 4.94 0Z"/><path d="M15.47 13.47 17 15l-1.53 1.53a3.5 3.5 0 0 1-4.94 0L9 15l1.53-1.53a3.5 3.5 0 0 1 4.94 0Z"/><path d="M19.47 9.47 21 11l-1.53 1.53a3.5 3.5 0 0 1-4.94 0L13 11l1.53-1.53a3.5 3.5 0 0 1 4.94 0Z"/>',
+  soup: '<path d="M11.248 3c.273.1.808.53.747 1.36-.05.83-.938 1.2-.989 2.02-.06.78.333 1.24.727 1.62"/><path d="M16.252 3c.268.1.794.53.745 1.36-.06.83-.923 1.2-.993 2.02-.05.78.338 1.24.725 1.62"/><path d="M19.5 12 22 6"/><path d="M4 12a1 1 0 00-.99 1.133A9 9 0 0012 21a9 9 0 008.99-7.867A1 1 0 0020 12z"/><path d="M6.252 3c.268.1.794.53.745 1.36-.06.83-.923 1.2-.993 2.02-.05.78.338 1.24.735 1.62"/><path d="M7 21h10"/>',
+  carrot: '<path d="M15 16a1 1 0 0 0-7-7q-4 4-5.987 12.385a.5.5 0 0 0 .602.602Q11 20 15 16l-3-3"/><path d="M15 9q4 4 7 0-3-4-7 0 4-4 0-7-4 3 0 7"/><path d="m8 15-2.58-2.58"/>',
+  milk: '<path d="M8 2h8"/><path d="M9 2v2.789a4 4 0 0 1-.672 2.219l-.656.984A4 4 0 0 0 7 10.212V20a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-9.789a4 4 0 0 0-.672-2.219l-.656-.984A4 4 0 0 1 15 4.788V2"/><path d="M7 15a6.472 6.472 0 0 1 5 0 6.47 6.47 0 0 0 5 0"/>',
+  soda: '<path d="m6 8 1.75 12.28a2 2 0 0 0 2 1.72h4.54a2 2 0 0 0 2-1.72L18 8"/><path d="M5 8h14"/><path d="M7 15a6.47 6.47 0 0 1 5 0 6.47 6.47 0 0 0 5 0"/><path d="m12 8 1-6h2"/>',
+  cookie: '<path d="M11 17h.01"/><path d="M11.496 2c.324-.016.558.292.529.615a4 4 0 004.235 4.368.713.713 0 01.758.757 4 4 0 004.366 4.237c.323-.03.63.204.614.527a10 10 0 01-2.915 6.566A1 1 0 114.93 4.918 10 10 0 0111.496 2"/><path d="M12 12h.01"/><path d="M16 16h.01"/><path d="M16 3h.01"/><path d="M21 4h.01"/><path d="M21 8h.01"/><path d="M7 14h.01"/><path d="M9 8h.01"/>',
+  baby: '<path d="M10 16c.5.3 1.2.5 2 .5s1.5-.2 2-.5"/><path d="M15 12h.01"/><path d="M19.38 6.813A9 9 0 0 1 20.8 10.2a2 2 0 0 1 0 3.6 9 9 0 0 1-17.6 0 2 2 0 0 1 0-3.6A9 9 0 0 1 12 3c2 0 3.5 1.1 3.5 2.5s-.9 2.5-2 2.5c-.8 0-1.5-.4-1.5-1"/><path d="M9 12h.01"/>',
+  spray: '<path d="M3 3h.01"/><path d="M7 5h.01"/><path d="M11 7h.01"/><path d="M3 7h.01"/><path d="M7 9h.01"/><path d="M3 11h.01"/><rect width="4" height="4" x="15" y="5"/><path d="m19 9 2 2v10c0 .6-.4 1-1 1h-6c-.6 0-1-.4-1-1V11l2-2"/><path d="m13 14 8-2"/><path d="m13 19 8-2"/>',
+  sparkles: '<path d="M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z"/><path d="M20 2v4"/><path d="M22 4h-4"/><circle cx="4" cy="20" r="2"/>',
+  droplets: '<path d="M7 16.3c2.2 0 4-1.83 4-4.05 0-1.16-.57-2.26-1.71-3.19S7.29 6.75 7 5.3c-.29 1.45-1.14 2.84-2.29 3.76S3 11.1 3 12.25c0 2.22 1.8 4.05 4 4.05z"/><path d="M12.56 6.6A10.97 10.97 0 0 0 14 3.02c.5 2.5 2 4.9 4 6.5s3 3.5 3 5.5a6.98 6.98 0 0 1-11.91 4.97"/>',
+  basket: '<path d="M4.5 10h15l-1.3 8.3a2 2 0 0 1-2 1.7H7.8a2 2 0 0 1-2-1.7ZM8.5 10 11 4.5M15.5 10 13 4.5M9.3 14.7l1.8 1.8 3.6-3.7"/>',
+};
+const ic = (name, extra = "") => `<svg class="ic ${extra}" viewBox="0 0 24 24" aria-hidden="true">${PATHS[name]}</svg>`;
+const ART = '<svg class="art" viewBox="0 0 140 128" aria-hidden="true"><g stroke="#3B2152" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"><path d="M33 74c-13-5-19-21-12-35 6 1 10 5 12 10 1-8 6-14 13-16 6 9 6 21 0 30Z" fill="#9BD15B"/><path d="M103 76c13-3 21-16 17-31-6 0-11 3-13 8-2-7-6-12-12-14-6 9-6 21-1 30Z" fill="#B7E07A"/><path d="M57 28c9-5 19 1 19 13 0 13-7 24-15 30-8-9-11-22-9-33 1-5 2-8 5-10Z" fill="#7B4BA8"/><path d="M55 30c3-7 11-9 17-4" fill="none" stroke-width="7.6"/><path d="M55 30c3-7 11-9 17-4" fill="none" stroke="#7DBB4B" stroke-width="3.2"/><path d="M35 40c5-3 11-1 13 4l12 34-10 4-18-32c-2-4-1-8 3-10Z" fill="#F58A3C"/><path d="M39 50l5-2M43 59l5-2" fill="none" stroke="#C7621D"/><circle cx="76" cy="62" r="14" fill="#EE5A45"/><path d="M70 50c2 3 9 3 12 0" fill="none"/><path d="M30 74C30 12 110 12 110 74" fill="none" stroke-width="9.6"/><path d="M30 74C30 12 110 12 110 74" fill="none" stroke="#C9EE6A" stroke-width="4.6"/><rect x="82" y="8" width="25" height="72" rx="12.5" transform="rotate(24 94 44)" fill="#F6BC62"/><path d="M98 26l8 6M93 38l9 6M88 50l9 6" fill="none" stroke="#B9772A"/><path d="M22 74h96l-9 40a9 9 0 0 1-9 7H40a9 9 0 0 1-9-7Z" fill="#62308C"/><rect x="15" y="66" width="110" height="15" rx="7.5" fill="#7A3FAE"/><path d="M48 91v19M63 91v19M77 91v19M92 91v19" stroke="#D5F578" stroke-width="6.5"/></g><path d="M18 12l2.5 6.5 6.5 2.5-6.5 2.5-2.5 6.5-2.5-6.5L9 21.5l6.5-2.5Z" fill="#FF9B5E"/><path d="M130 92l1.8 4.7 4.7 1.8-4.7 1.8-1.8 4.7-1.8-4.7-4.7-1.8 4.7-1.8Z" fill="#FF9B5E"/></svg>';
+// боја и икона по вид на јадење и по група производи
+const MEAT = ["t-peach", "beef"], POT = ["t-lav", "soup"];
+const KIND_LOOK = { "пилешко": ["t-peach", "drumstick"], "мелено месо": MEAT, "свинско": MEAT, "јунешко": MEAT, "панирано": MEAT, "виршли и колбаси": ["t-peach", "ham"],
+  "риба": ["t-sky", "fish"], "зеленчук": ["t-green", "carrot"], "грав": POT, "леќа и наут": POT, "тесто": ["t-lav", "wheat"], "јајца": ["t-lav", "egg"] };
+const dishLook = d => D.dishes[d].posno ? ["t-green", "leaf"] : KIND_LOOK[D.dishes[d].kind] || ["t-lav", "pot"];
+const GROUP_LOOK = { "Млечни и јајца": ["t-sky", "milk"], "Месо и риба": ["t-peach", "drumstick"], "Леб и теста": ["t-lav", "loaf"], "Брашно, жита и тестенини": ["t-lav", "wheat"],
+  "Масло, шеќер и зачини": ["t-lav", "droplets"], "Конзерви и намази": ["t-lav", "soup"], "Зеленчук и овошје": ["t-green", "carrot"], "Пијалоци": ["t-sky", "soda"],
+  "Слатко и грицки": ["t-peach", "cookie"], "Бебе": ["t-sky", "baby"], "Домаќинство": ["t-sky", "spray"], "Лична хигиена": ["t-sky", "sparkles"] };
+const needLook = id => !D.needs[id] ? ["t-sky", "tag"] : /риб|туна|сардин|скуш/i.test(D.needs[id].name) ? ["t-sky", "fish"] : GROUP_LOOK[D.needs[id].group] || ["t-sky", "tag"];
+const DOTS = ["#B6DE5B", "#FFB48F", "#C9A7F0", "#9CC3EE"];
 
 // --- цени. Акција со картичка важи само кај маркетите каде купувачот има картичка; инаку се брои редовната цена.
 const RAW = Object.fromEntries(Object.entries(D.needs).map(([id, n]) => [id, { ...n.offers }]));
@@ -315,10 +465,10 @@ function offer(id, chain, wanted) {
   return best;
 }
 const MAINS = Object.keys(D.dishes).filter(d => D.dishes[d].kind !== "прилог" && D.dishes[d].parts.every(p => minUnit[p[0]] != null)).sort((a, b) => a.localeCompare(b, "mk"));
-const dishCost = (d, scale) => D.dishes[d].parts.reduce((s, [id, q]) => s + q * scale * minUnit[id], 0);
-const dishSave = (d, scale) => D.dishes[d].parts.reduce((s, [id, q]) => s + q * scale * saveUnit[id], 0);
+// Едно правило за заокружување: цената на јадење е на цел денар, а збирот на менито е збир на тие цени.
+const dishCost = (d, scale) => Math.max(1, Math.round(D.dishes[d].parts.reduce((s, [id, q]) => s + q * scale * minUnit[id], 0)));
+const dishSave = (d, scale) => Math.round(D.dishes[d].parts.reduce((s, [id, q]) => s + q * scale * saveUnit[id], 0));
 const PROMO_PULL = 4;      // денар заштеден со акција вреди колку четири денари побогато мени
-const saveTag = sv => sv >= 3 ? `<span class="tag good">акција −${den(sv)}</span>` : "";
 
 // --- избор на мени
 function choose(o) {
@@ -399,13 +549,15 @@ function shop() {
 
 // --- состојба
 const fresh = () => ({ budget: 1100, people: 4, fasting: false, thrifty: false, favs: DEFAULT_FAVS.filter(d => D.dishes[d]), history: [], pantry: {}, week: 1,
-  menu: null, skipped: {}, locked: {}, own: {}, done: [], tab: "menu", open: -1, watch: {}, have: [], spent: [], regular: {}, cards: {} });
+  menu: null, skipped: {}, locked: {}, own: {}, done: [], tab: "menu", open: -1, watch: {}, have: [], spent: [], regular: {}, cards: {}, dark: false });
 let S = fresh();
 try { const saved = JSON.parse(localStorage.getItem("my-shopping-2") || "null"); if (saved && saved.budget) S = { ...fresh(), ...saved, favs: (saved.favs || []).filter(d => D.dishes[d]) }; } catch (e) {}
+if (S.tab === "dishes") S.tab = "menu";
+if (S.tab === "store") S.tab = "list";
 reprice(S.cards);
 const onList = id => S.own[id] != null || S.regular[id] != null;
 const save = () => { try { localStorage.setItem("my-shopping-2", JSON.stringify(S)); } catch (e) {} };
-const V = { chain: "", group: "", best: false, noCard: false, shown: 40, q: "", needGroup: "", day: null, kind: "", dq: "", openDish: "" };       // што се гледа, не се памти
+const V = { chain: "", group: "", best: false, noCard: false, shown: 30, q: "", needGroup: "", day: null, kind: "", dq: "", openDish: "", settings: false, stores: false };       // што се гледа, не се памти
 function avoided() {
   const recent = S.history.slice(-3), out = new Set(recent.length ? recent[recent.length - 1] : []);
   for (const week of recent.slice(0, -1)) for (const d of week) if (!S.favs.includes(d)) out.add(d);
@@ -429,39 +581,61 @@ function swap(i) {
   const pick = within.length ? within.sort((a, b) => dishCost(b, scale) - dishCost(a, scale))[0] : pool.sort((a, b) => dishCost(a, scale) - dishCost(b, scale))[0];
   S.menu[i] = pick; S.skipped[i].push(pick); delete S.locked[i]; S.open = -1;
 }
+let toastTimer = 0;
+function toast(text) { const t = $("toast"); t.textContent = text; t.hidden = false; clearTimeout(toastTimer); toastTimer = setTimeout(() => { t.hidden = true; }, 2400); }
+
+// --- делови што се повторуваат
+const promoNote = id => needPromo[id] ? `<small>акција во ${esc(LABEL[minChain[id]])}, ${when(needSpan[id])}</small>` : "";
+const dishTags = (d, scale, extra = []) => [S.favs.includes(d) ? "омилено" : "", D.dishes[d].posno ? "посно" : "", dishSave(d, scale) >= 3 ? "акција −" + den(dishSave(d, scale)) : "", ...extra].filter(Boolean).join(" · ");
+const partsOf = (d, scale) => D.dishes[d].parts.map(([id, q]) => `<span><span>${esc(lower(D.needs[id].name))}, ${amount(q * scale, D.needs[id].unit)}${promoNote(id)}</span><span>${den(q * scale * minUnit[id])}</span></span>`).join("");
+const addBtn = (id, cls = "soft small") => `<button class="${cls}${onList(id) ? " done" : ""}" data-add="${esc(id)}">${onList(id) ? ic("check") + "На листа" : "+ На листа"}</button>`;
+const checks = p => (p.best ? `<div class="strip ok">${ic("check")}<span>Најевтино во ${esc(D.city)}: ${esc(lower(D.needs[p.need].name))}</span></div>` : "") +
+  (p.else ? (p.else[1] < p.price ? `<div class="strip warn"><span>Истото кај ${esc(LABEL[p.else[0]])}: ${den(p.else[1])}</span></div>` : p.else[1] > p.price ? `<div class="strip ok">${ic("check")}<span>Кај ${esc(LABEL[p.else[0]])} е ${den(p.else[1])}</span></div>` : `<div class="strip"><span>Иста цена кај ${esc(LABEL[p.else[0]])}</span></div>`) : "") +
+  (p.card ? `<div class="strip"><span>Со картичка на ${esc(LABEL[p.chain])}</span></div>` : "");
+const promoCard = p => {
+  const [tint, icon] = needLook(p.need);
+  return `<article class="card promo"><div class="phead"><span class="tile ${tint}">${ic(icon)}</span><span class="pname">${esc(nice(p.name))}</span></div>` +
+    `<div class="pmeta"><b>${esc(LABEL[p.chain])}</b> · ${when(p.since + "/" + p.until)}</div>` +
+    `<div class="pprice"><span class="bigprice"><b>${den(p.price).replace(" ден.", "")}</b><span>ден.</span></span><s>${den(p.regular)}</s><span class="badge">−${p.pct}%</span></div>` +
+    checks(p) + (p.need ? addBtn(p.need, "soft wide") : "") + `</article>`;
+};
+const promoMini = p => `<div class="pmini"><b>${esc(nice(p.name))}</b><small><b>${esc(LABEL[p.chain])}</b> · ${when(p.since + "/" + p.until)}</small><span class="right"><span class="price">${den(p.price)}</span><span class="badge">−${p.pct}%</span></span></div>`;
 
 // --- приказ: мени
 function renderMenu(R) {
-  const scale = S.people / PORTIONS, total = S.menu.reduce((s, d) => s + dishCost(d, scale), 0);
-  $("budget").value = S.budget; $("budgetRange").value = S.budget; $("people").textContent = S.people; $("fasting").checked = S.fasting; $("thrifty").checked = S.thrifty;
+  const scale = S.people / PORTIONS, total = S.menu.reduce((s, d) => s + dishCost(d, scale), 0), saved = S.menu.reduce((t, d) => t + dishSave(d, scale), 0);
+  $("budget").value = S.budget; $("budgetRange").value = S.budget; $("people").textContent = S.people; $("fasting").checked = S.fasting; $("thrifty").checked = S.thrifty; $("dark").checked = S.dark;
   $("favCount").textContent = S.favs.length + " избрани";
   $("favs").innerHTML = MAINS.map(d => `<button class="chip" aria-pressed="${S.favs.includes(d)}" data-fav="${esc(d)}">${esc(d)}</button>`).join("");
   $("cardBox").hidden = !CARD_CHAINS.length;
   $("cardCount").textContent = "имам " + CARD_CHAINS.filter(c => S.cards[c] !== false).length + " од " + CARD_CHAINS.length;
   $("cards").innerHTML = CARD_CHAINS.map(c => `<button class="chip" aria-pressed="${S.cards[c] !== false}" data-card="${c}">${esc(LABEL[c])}</button>`).join("");
   $("weekTitle").textContent = "Мени за недела " + S.week;
-  const saved = S.menu.reduce((t, d) => t + dishSave(d, scale), 0);
+  $("settings").hidden = !V.settings; $("editBudget").textContent = V.settings ? "Затвори" : "Измени буџет";
   const drops = Object.keys(S.watch).filter(id => minUnit[id] != null && minUnit[id] < S.watch[id].p - 0.05);
   $("news").hidden = !drops.length;
-  if (drops.length) $("news").textContent = `Поевтино од кога следиш: ${drops.slice(0, 3).map(id => lower(D.needs[id].name)).join(", ")}${drops.length > 3 ? " и уште " + (drops.length - 3) : ""}. Допри за детали.`;
-  const over = total > S.budget + 0.5;
+  if (drops.length) $("news").innerHTML = ic("check") + `<span>Поевтино од кога следиш: ${esc(drops.slice(0, 3).map(id => lower(D.needs[id].name)).join(", "))}${drops.length > 3 ? " и уште " + (drops.length - 3) : ""}. Допри за детали.</span>`;
+  const over = total > S.budget;
   $("alert").hidden = !over;
   if (over) $("alert").textContent = DAYS.some((_, i) => isMine(i)) ? `Со твоите избори менито излегува ${den(total)} Тоа е ${den(total - S.budget)} над буџетот.` : `Буџетот не стига за седум јадења. Најевтиното мени за ${S.people} чини ${den(S.cheapest)}`;
+  $("budgetCard").innerHTML = `<div class="cap">Неделен буџет · ${S.people} ${S.people === 1 ? "член" : "члена"}</div>` +
+    `<div class="bigprice"><b>${thousands(total)}</b><span>ден.</span></div><div class="of">од ${den(S.budget)}</div>` +
+    `<div class="meter"><i style="width:${Math.min(100, 100 * total / S.budget)}%"></i></div>` +
+    (saved >= 3 ? `<span class="pill lime">${ic("check")}Со акциите штедиш ${den(saved)}</span>` : `<span class="pill">${over ? "Над буџетот за " + den(total - S.budget) : "Останува " + den(S.budget - total)}</span>`) + ART;
+  $("menuCap").textContent = "7 ручеци за семејството";
   $("menu").innerHTML = S.menu.map((d, i) => {
-    const tags = (S.favs.includes(d) ? '<span class="tag">омилено</span>' : "") + (D.dishes[d].posno ? '<span class="tag good">посно</span>' : "") + saveTag(dishSave(d, scale));
-    const parts = S.open === i ? `<div class="parts">${D.dishes[d].parts.map(([id, q]) => `<span><span>${esc(lower(D.needs[id].name))}${needPromo[id] ? " · акција во " + esc(LABEL[minChain[id]]) + ", " + when(needSpan[id]) : ""}</span><span>${amount(q * scale, D.needs[id].unit)}</span></span>`).join("")}` +
-      `<button class="ghost" data-pickday="${i}" style="width:100%;margin-top:8px;padding:8px">Избери друго од листата</button></div>` : "";
-    return `<div class="day"><span class="d">${DAYS[i]}</span><button class="dishbtn" data-open="${i}" aria-expanded="${S.open === i}"><b>${esc(d)}</b>${tags ? `<span class="tags">${tags}</span>` : ""}</button>` +
-      `<span class="price">${den(dishCost(d, scale))}</span><button class="icon" data-swap="${i}" aria-label="Друго јадење за ${DAYS[i]}">↻</button>` +
-      `<button class="icon" data-lock="${i}" aria-pressed="${S.locked[i] === d}" aria-label="Задржи го јадењето за ${DAYS[i]}">${LOCK}</button>${parts}</div>`;
-  }).join("") +
-    `<div class="total"><span>Состојки за неделата</span><span class="big">${den(total)}</span></div><div class="meter"><i style="width:${Math.min(100, 100 * total / S.budget)}%"></i></div>` +
-    `<p class="note">${over ? "Над буџетот за " + den(total - S.budget) : "Останува " + den(S.budget - total) + " од буџетот"}` +
-    `${saved >= 3 ? " Со акциите ова мени е поевтино за " + den(saved) : ""}</p>`;
-  $("menuStore").innerHTML = (R.best ? `<div class="row"><span class="who">${esc(LABEL[R.best])}<span class="tag good">најевтино со сè</span></span><span class="price">${den(R.bestTill)}</span><span class="why">целата листа на едно место, сметка на каса</span></div>` : `<p class="note" style="margin:0">Ниту еден маркет ја нема целата листа.</p>`) +
-    `<button class="ghost" data-go="list" style="width:100%;margin-top:12px">Отвори ја листата (${R.lines.length} ставки)</button>`;
+    const [tint, icon] = dishLook(d), tags = dishTags(d, scale, isMine(i) ? ["твој избор"] : []);
+    const parts = S.open === i ? `<div class="parts">${partsOf(d, scale)}<button class="soft wide" data-pickday="${i}">Избери друго од листата</button></div>` : "";
+    return `<div class="dishrow ${tint}"><span class="tile">${ic(icon)}</span>` +
+      `<button class="dishbtn" data-open="${i}" aria-expanded="${S.open === i}"><span class="day">${DAYS[i]}</span><b>${esc(d)}</b>${tags ? `<span class="tags">${esc(tags)}</span>` : ""}</button>` +
+      `<span class="side"><span class="price">${den(dishCost(d, scale))}</span><span class="acts"><button class="ico" data-swap="${i}" aria-label="Нов предлог за ${DAYS_FULL[i]}">${ic("refresh")}</button>` +
+      `<button class="ico" data-lock="${i}" aria-pressed="${S.locked[i] === d}" aria-label="Задржи го јадењето за ${DAYS_FULL[i]}">${ic("lock")}</button></span></span>${parts}</div>`;
+  }).join("");
+  $("menuStore").innerHTML = (R.best ? `<div class="cap" style="color:var(--muted)">Најевтино со сè</div><div class="field" style="min-height:0;margin:6px 0 2px"><span class="name" style="font-size:18px">${esc(LABEL[R.best])}</span><span class="bigprice"><b style="font-size:26px">${thousands(R.bestTill)}</b><span>ден. на каса</span></span></div>` :
+    `<p class="note">Ниту еден маркет ја нема целата листа.</p>`) +
+    `<p class="note">Буџетот погоре ја брои потрошената количина. На каса се плаќаат цели пакувања, а остатокот се памети за следната недела.</p><button class="link" data-go="list">Отвори ја листата (${R.lines.length}) ${ic("arrow")}</button>`;
   const seen = new Set(), top = PROMOS.filter(p => p.best && !p.card && !seen.has(p.chain) && seen.add(p.chain)).slice(0, 4);
-  $("teaser").innerHTML = top.map(promoCard).join("") + `<button class="ghost" data-go="promos" style="width:100%;margin-top:12px">Сите ${PROMOS.length} акции</button>`;
+  $("teaser").innerHTML = top.map(promoMini).join("");
 }
 
 // --- приказ: избор на јадења
@@ -478,10 +652,11 @@ function renderDishes() {
   if (V.day == null) V.day = nextFree(0);
   const scale = S.people / PORTIONS, total = S.menu.reduce((t, d) => t + dishCost(d, scale), 0), mine = DAYS.filter((_, i) => isMine(i)).length, last = S.history.length ? S.history[S.history.length - 1] : [];
   $("weekStrip").innerHTML = DAYS.map((d, i) => `<button class="${isMine(i) ? "mine" : ""}" aria-pressed="${V.day === i}" data-day="${i}" aria-label="${DAYS_FULL[i]}: ${esc(S.menu[i])}">${d}<i></i></button>`).join("");
-  $("pickHint").innerHTML = `<b>${DAYS_FULL[V.day]}:</b> ${esc(S.menu[V.day])} (${isMine(V.day) ? "твој избор" : "предлог"}). Неделата: ${den(total).replace(" ден.", "")} од ${den(S.budget)} Твои избори: ${mine} од 7.` +
-    (mine ? ` <button class="mini" id="clearPicks">откажи ги моите избори</button>` : " Деновите што нема да ги избереш остануваат со предлог.");
+  $("pickHint").innerHTML = `<b>${DAYS_FULL[V.day]}:</b> ${esc(S.menu[V.day])} (${isMine(V.day) ? "твој избор" : "предлог"}). Неделата: ${thousands(total)} од ${den(S.budget)} Твои избори: ${mine} од 7.` +
+    (mine ? "" : " Деновите што нема да ги избереш остануваат со предлог.");
+  $("clearPicks").hidden = !mine;
   const slide = $("kindChips").scrollLeft, chip = (v, label) => `<button class="chip" aria-pressed="${V.kind === v}" data-kind="${esc(v)}">${esc(label)}</button>`;
-  $("kindChips").innerHTML = chip("", "Сите " + MAINS.length) + chip("*fav", "Омилени") + chip("*posno", "Посни") + chip("*cheap", "Најевтини") + chip("*promo", "На акција") + KINDS.map(k => chip(k, k)).join("");
+  $("kindChips").innerHTML = chip("", "Сите · " + MAINS.length) + chip("*fav", "Омилени") + chip("*posno", "Посни") + chip("*cheap", "Најевтини") + chip("*promo", "На акција") + KINDS.map(k => chip(k, nice(k))).join("");
   $("kindChips").scrollLeft = slide;
   const q = lower(V.dq.trim());
   let list = MAINS.filter(d => (!q || lower(d).includes(q)) && (V.kind === "" || V.kind === "*cheap" || (V.kind === "*promo" ? dishSave(d, scale) >= 3 : V.kind === "*fav" ? S.favs.includes(d) : V.kind === "*posno" ? D.dishes[d].posno : D.dishes[d].kind === V.kind)));
@@ -489,35 +664,29 @@ function renderDishes() {
   if (V.kind === "*promo") list = list.slice().sort((a, b) => dishSave(b, scale) - dishSave(a, scale));
   $("dishList").innerHTML = list.map(d => {
     const at = S.menu.indexOf(d), fav = S.favs.includes(d), open = V.openDish === d;
-    const tags = (D.dishes[d].posno ? '<span class="tag good">посно</span>' : "") + (at >= 0 ? `<span class="tag">${isMine(at) ? "избрано" : "предлог"}: ${DAYS[at]}</span>` : "") + saveTag(dishSave(d, scale)) + (last.includes(d) ? '<span class="tag warn">минатата недела</span>' : "");
-    const parts = open ? `<div class="parts">${D.dishes[d].parts.map(([id, qty]) => `<span><span>${esc(lower(D.needs[id].name))}, ${amount(qty * scale, D.needs[id].unit)}${needPromo[id] ? " · акција во " + esc(LABEL[minChain[id]]) + ", " + when(needSpan[id]) : ""}</span><span>${den(qty * scale * minUnit[id])}</span></span>`).join("")}</div>` : "";
-    return `<div class="dish"><button class="icon" data-fav2="${esc(d)}" aria-pressed="${fav}" aria-label="Омилено: ${esc(d)}">${fav ? "♥" : "♡"}</button>` +
-      `<button class="dishbtn" data-dopen="${esc(d)}" aria-expanded="${open}"><b>${esc(d)}</b>${tags ? `<span class="tags">${tags}</span>` : ""}</button><span class="price">${den(dishCost(d, scale))}</span>${parts}` +
-      `<span class="meta"><span>${esc(D.dishes[d].kind)} · ${D.dishes[d].parts.length} состојки</span>${at === V.day ? `<span class="tag good">за ${DAYS_FULL[V.day]} ✓</span>` : `<button class="add" data-put="${esc(d)}">За ${DAYS_FULL[V.day]}</button>`}</span></div>`;
-  }).join("") || `<p class="note" style="margin:0">Нема такво јадење.</p>`;
+    const tags = [D.dishes[d].posno ? "посно" : "", at >= 0 ? (isMine(at) ? "избрано: " : "предлог: ") + DAYS[at] : "", dishSave(d, scale) >= 3 ? "акција −" + den(dishSave(d, scale)) : "", last.includes(d) ? "минатата недела" : ""].filter(Boolean).join(" · ");
+    return `<div class="dish"><button class="ico" data-fav2="${esc(d)}" aria-pressed="${fav}" aria-label="Омилено: ${esc(d)}">${ic("heart", "fillable")}</button>` +
+      `<button class="dishbtn" data-dopen="${esc(d)}" aria-expanded="${open}"><b>${esc(d)}</b>${tags ? `<span class="tags">${esc(tags)}</span>` : ""}</button><span class="price">${den(dishCost(d, scale))}</span>` +
+      (open ? `<div class="parts">${partsOf(d, scale)}</div>` : "") +
+      `<span class="meta"><span>${esc(D.dishes[d].kind)} · ${D.dishes[d].parts.length} состојки</span>${at === V.day ? `<span class="tag good">${ic("check")}за ${DAYS_FULL[V.day]}</span>` : `<button class="soft small" data-put="${esc(d)}">За ${DAYS_FULL[V.day]}</button>`}</span></div>`;
+  }).join("") || `<p class="note" style="padding:18px">Нема такво јадење.</p>`;
 }
 
 // --- приказ: акции
-const promoCard = p => {
-  const tags = (p.best ? `<span class="tag good">најевтино во ${esc(D.city)}: ${esc(lower(D.needs[p.need].name))}</span>` : "") + (p.card ? '<span class="tag">со картичка</span>' : "") +
-    (p.else ? (p.else[1] < p.price ? `<span class="tag warn">истото кај ${esc(LABEL[p.else[0]])}: ${den(p.else[1])}</span>` : p.else[1] > p.price ? `<span class="tag good">кај ${esc(LABEL[p.else[0]])} е ${den(p.else[1])}</span>` : `<span class="tag">иста цена кај ${esc(LABEL[p.else[0]])}</span>`) : "");
-  return `<div class="promo"><div><div class="n">${esc(p.name)}</div><div class="m"><b>${esc(LABEL[p.chain])}</b> · ${when(p.since + "/" + p.until)}</div></div>` +
-    `<div class="p"><b>${den(p.price)}</b><s>${den(p.regular)}</s><em>−${p.pct}%</em></div><div class="tags">${tags}${p.need ? `<button class="add" data-add="${esc(p.need)}">${onList(p.need) ? "на листа ✓" : "+ на листа"}</button>` : ""}</div></div>`;
-};
 const today = new Date().toISOString().slice(0, 10);
 const PROMOS = D.promos.map(p => ({ chain: CHAINS[p[0]], name: p[1], price: p[2], regular: p[3], pct: p[4], since: p[11] || "", until: p[5], card: !!p[6], need: p[7], best: !!p[8], else: p[9] >= 0 ? [CHAINS[p[9]], p[10]] : null,
   group: p[7] && D.needs[p[7]] ? D.needs[p[7]].group : "Друго" })).filter(p => !p.until || p.until >= today);
 function renderPromos() {
   const chip = (attr, value, label, on) => `<button class="chip" aria-pressed="${on}" ${attr}="${esc(value)}">${esc(label)}</button>`;
-  $("promoChains").innerHTML = chip("data-pc", "", "Сите маркети", V.chain === "") + CHAINS.map(c => chip("data-pc", c, LABEL[c] + " " + PROMOS.filter(p => p.chain === c).length, V.chain === c)).join("");
+  const slideA = $("promoChains").scrollLeft, slide = $("promoGroups").scrollLeft;
+  $("promoChains").innerHTML = chip("data-pc", "", "Сите", V.chain === "") + CHAINS.map(c => chip("data-pc", c, LABEL[c] + " · " + thousands(PROMOS.filter(p => p.chain === c).length), V.chain === c)).join("");
   const groups = [...new Set(PROMOS.map(p => p.group))];
-  const slide = $("promoGroups").scrollLeft;
   $("promoGroups").innerHTML = chip("data-pg", "", "Сè", V.group === "") + D.groups.concat("Друго").filter(g => groups.includes(g)).map(g => chip("data-pg", g, g, V.group === g)).join("");
-  $("promoGroups").scrollLeft = slide;
+  $("promoChains").scrollLeft = slideA; $("promoGroups").scrollLeft = slide;
   $("onlyBest").checked = V.best; $("noCard").checked = V.noCard;
   const list = PROMOS.filter(p => (!V.chain || p.chain === V.chain) && (!V.group || p.group === V.group) && (!V.best || p.best) && (!V.noCard || !p.card));
-  $("promoStats").textContent = `${PROMOS.length} важечки акции. ${PROMOS.filter(p => p.best).length} се најевтини во градот за својата потреба. Прикажани: ${Math.min(V.shown, list.length)} од ${list.length}.`;
-  $("promoList").innerHTML = list.slice(0, V.shown).map(promoCard).join("") || `<p class="note" style="margin:0">Нема акции со овој избор.</p>`;
+  $("promoStats").textContent = `${thousands(PROMOS.length)} важечки · ${PROMOS.filter(p => p.best).length} најевтини во градот` + (list.length !== PROMOS.length ? ` · избрани ${thousands(list.length)}` : "");
+  $("promoList").innerHTML = list.slice(0, V.shown).map(promoCard).join("") || `<p class="note">Нема акции со овој избор.</p>`;
   $("morePromos").hidden = list.length <= V.shown;
 }
 
@@ -531,9 +700,10 @@ function renderPrices() {
   $("needResults").innerHTML = needs.slice(0, 40).map(([id, n]) => {
     const cells = CHAINS.map(c => { const r = n.offers[c][0]; return `<div class="cell${r && c === minChain[id] ? " min" : ""}">${esc(LABEL[c])}<b>${r ? den(r[2]).replace(" ден.", "") : "–"}</b></div>`; }).join("");
     const r = minChain[id] ? n.offers[minChain[id]][0] : null;
-    return `<div class="row"><span class="who">${esc(n.name)}<span class="count">ден. за 1 ${esc(n.unit)}</span></span><span class="acts">${minUnit[id] != null ? `<button class="icon" data-watch="${esc(id)}" aria-pressed="${!!S.watch[id]}" aria-label="Следи ја цената: ${esc(n.name)}">${S.watch[id] ? "★" : "☆"}</button>` : ""}<button class="add" data-add="${esc(id)}">${onList(id) ? "на листа ✓" : "+ на листа"}</button></span>` +
-      `<div class="grid4">${cells}</div><span class="why">${r ? "најевтино: " + esc(lower(r[0])) + (r[4] ? " · акција во " + esc(LABEL[minChain[id]]) + ", " + when(r[6]) : "") : "нема цена"}</span></div>`;
-  }).join("") || `<p class="note" style="margin:0">Нема таква потреба. Пробај со друг збор.</p>`;
+    return `<div class="row"><span class="who">${esc(n.name)}<small>ден. за 1 ${esc(n.unit)}</small></span>` +
+      `<span class="acts">${minUnit[id] != null ? `<button class="ico" data-watch="${esc(id)}" aria-pressed="${!!S.watch[id]}" aria-label="Следи ја цената: ${esc(n.name)}">${ic("star", "fillable")}</button>` : ""}</span>` +
+      `<div class="grid4">${cells}</div><div class="rowfoot"><span class="why">${r ? "Најевтино: " + esc(lower(r[0])) + (r[4] ? " · акција во " + esc(LABEL[minChain[id]]) + ", " + when(r[6]) : "") : "Нема цена"}</span>${addBtn(id)}</div></div>`;
+  }).join("") || `<p class="note" style="padding:18px">Нема таква потреба. Пробај со друг збор.</p>`;
   const products = [];
   if (q.length >= 3) for (const [id, n] of Object.entries(D.needs)) for (const c of CHAINS) for (const r of n.offers[c]) if (lower(r[0]).includes(q)) products.push({ c, r, unit: n.unit });
   products.sort((a, b) => a.r[1] - b.r[1]);
@@ -541,7 +711,7 @@ function renderPrices() {
   $("sameBox").hidden = !same.length;
   $("sameResults").innerHTML = same.slice(0, q ? 30 : 12).map(sameRow).join("");
   $("productBox").hidden = !products.length;
-  $("productResults").innerHTML = products.slice(0, 40).map(({ c, r, unit }) => `<div class="row"><span class="who" style="font-weight:500">${esc(r[0])}</span><span class="price">${den(r[1])}</span><span class="why">${esc(LABEL[c])} · ${den(r[2])} за 1 ${esc(unit)}${r[4] ? " · акција " + when(r[6]) : ""}</span></div>`).join("");
+  $("productResults").innerHTML = products.slice(0, 40).map(({ c, r, unit }) => `<div class="row"><span class="who">${esc(nice(r[0]))}</span><span class="price">${den(r[1])}</span><span class="why"><b>${esc(LABEL[c])}</b> · ${den(r[2])} за 1 ${esc(unit)}${r[4] ? " · акција " + when(r[6]) : ""}</span></div>`).join("");
 }
 
 // --- приказ: алатки
@@ -549,37 +719,38 @@ const DISH_NEEDS = [...new Set(MAINS.flatMap(d => D.dishes[d].parts.map(p => p[0
 const SAME = D.same.map(r => { const prices = r.slice(2, 2 + CHAINS.length), known = prices.filter(v => v != null); return { name: r[0], need: r[1], prices, low: Math.min(...known), high: Math.max(...known), deals: r[2 + CHAINS.length] || [] }; });
 function sameRow(g) {
   const cells = CHAINS.map((c, i) => `<div class="cell${g.prices[i] === g.low ? " min" : ""}">${esc(LABEL[c])}<b>${g.prices[i] == null ? "–" : den(g.prices[i]).replace(" ден.", "")}</b></div>`).join("");
-  return `<div class="row"><span class="who" style="font-weight:500">${esc(g.name)}</span><span class="price">−${den(g.high - g.low)}</span><div class="grid4">${cells}</div>` +
-    (g.deals.length ? `<span class="why">акција: ${g.deals.map(([c, span]) => esc(LABEL[CHAINS[c]]) + " " + when(span)).join("; ")}</span>` : "") +
+  return `<div class="row"><span class="who">${esc(nice(g.name))}</span><span class="price">−${den(g.high - g.low)}</span><div class="grid4">${cells}</div>` +
+    (g.deals.length ? `<span class="why">Акција: ${g.deals.map(([c, span]) => "<b>" + esc(LABEL[CHAINS[c]]) + "</b> " + when(span)).join("; ")}</span>` : "") +
     (g.high > 1.8 * g.low ? `<span class="why"><span class="tag warn">голема разлика: провери го пакувањето на полица</span></span>` : "") + `</div>`;
 }
+const plainRow = (who, right, why) => `<div class="row" style="padding-left:0;padding-right:0"><span class="who">${who}</span>${right}<span class="why">${why}</span></div>`;
 function renderTools() {
   const scale = S.people / PORTIONS, mine = id => S.watch[id] || onList(id) ? 0 : 1;
   const moved = D.changes.map(c => ({ id: c[0], old: c[1], now: c[2], chain: CHAINS[c[3]] })).filter(c => D.needs[c.id]).sort((a, b) => mine(a.id) - mine(b.id) || a.now / a.old - b.now / b.old);
   $("changesBox").hidden = !moved.length;
   $("changesTitle").textContent = "Промени на цени од " + D.since;
-  $("changesList").innerHTML = moved.slice(0, 16).map(c => `<div class="row"><span class="who" style="font-weight:500">${esc(D.needs[c.id].name)}</span><span class="price">${den(c.now)}</span>` +
+  $("changesList").innerHTML = moved.slice(0, 16).map(c => `<div class="row"><span class="who">${esc(D.needs[c.id].name)}</span><span class="price">${den(c.now)}</span>` +
     `<span class="why"><span class="tag ${c.now < c.old ? "good" : "warn"}">${c.now < c.old ? "поевтино" : "поскапо"} за ${den(Math.abs(c.now - c.old))}</span> беше ${den(c.old)} за 1 ${esc(D.needs[c.id].unit)} · сега најевтино во ${esc(LABEL[c.chain])}</span></div>`).join("");
   const watched = Object.keys(S.watch).filter(id => D.needs[id] && minUnit[id] != null);
   $("watchList").innerHTML = watched.map(id => {
     const w = S.watch[id], now = minUnit[id], diff = now - w.p;
     const tag = Math.abs(diff) < 0.05 ? `<span class="tag">без промена од ${esc(w.d)}</span>` : `<span class="tag ${diff < 0 ? "good" : "warn"}">${diff < 0 ? "поевтино" : "поскапо"} за ${den(Math.abs(diff))} од ${esc(w.d)}</span>`;
-    return `<div class="row"><span class="who">${esc(D.needs[id].name)}</span><span class="acts"><span class="price">${den(now)}</span><button class="x" data-watch="${esc(id)}" aria-label="Не следи: ${esc(D.needs[id].name)}">×</button></span>` +
-      `<span class="why">${tag} за 1 ${esc(D.needs[id].unit)} · ${esc(LABEL[minChain[id]])} · ${esc(lower(D.needs[id].offers[minChain[id]][0][0]))}</span></div>`;
-  }).join("") || `<p class="note" style="margin:0">Во „Цени" допри ☆ кај она што го купуваш често. Тука ќе гледаш дали поевтинило или поскапело од денот кога почна да го следиш.</p>`;
+    return plainRow(esc(D.needs[id].name), `<span class="acts"><span class="price">${den(now)}</span><button class="x" data-watch="${esc(id)}" aria-label="Не следи: ${esc(D.needs[id].name)}">${ic("x")}</button></span>`,
+      `${tag} за 1 ${esc(D.needs[id].unit)} · ${esc(LABEL[minChain[id]])} · ${esc(lower(D.needs[id].offers[minChain[id]][0][0]))}`);
+  }).join("") || `<p class="note">Во „Цени" допри ја ѕвездата кај она што го купуваш често. Тука ќе гледаш дали поевтинило или поскапело од денот кога почна да го следиш.</p>`;
   const have = new Set(S.have);
   $("haveCount").textContent = have.size ? have.size + " избрани" : "одбери";
   $("haveChips").innerHTML = DISH_NEEDS.map(id => `<button class="chip" aria-pressed="${have.has(id)}" data-have="${esc(id)}">${esc(lower(D.needs[id].name))}</button>`).join("");
   const ranked = MAINS.map(d => { const miss = D.dishes[d].parts.filter(p => !have.has(p[0])); return { d, miss, n: D.dishes[d].parts.length, cost: miss.reduce((t, [id, q]) => t + q * scale * minUnit[id], 0) }; })
     .filter(x => x.miss.length < x.n).sort((a, b) => a.miss.length - b.miss.length || a.cost - b.cost);
-  $("cookResults").innerHTML = !have.size ? `<p class="note" style="margin:0">Означи што имаш дома и ќе ги видиш јадењата за кои ти фали најмалку.</p>` :
-    ranked.slice(0, 8).map(x => `<div class="row"><span class="who" style="font-weight:500">${esc(x.d)}</span>${x.miss.length ? `<button class="add" data-cook="${esc(x.d)}">+ на листа</button>` : `<span class="tag good" style="align-self:start">имаш сè</span>`}` +
-      `<span class="why">${x.miss.length ? "фали: " + esc(lower(x.miss.map(p => D.needs[p[0]].name).join(", "))) + " · околу " + den(x.cost) : "сите состојки се дома"}</span></div>`).join("") ||
-    `<p class="note" style="margin:0">Со ова уште не излегува ниту едно јадење.</p>`;
+  $("cookResults").innerHTML = !have.size ? `<p class="note">Означи што имаш дома и ќе ги видиш јадењата за кои ти фали најмалку.</p>` :
+    ranked.slice(0, 8).map(x => plainRow(esc(x.d), x.miss.length ? `<button class="soft small" data-cook="${esc(x.d)}">+ На листа</button>` : `<span class="tag good">имаш сè</span>`,
+      x.miss.length ? "фали: " + esc(lower(x.miss.map(p => D.needs[p[0]].name).join(", "))) + " · околу " + den(x.cost) : "сите состојки се дома")).join("") ||
+    `<p class="note">Со ова уште не излегува ниту едно јадење.</p>`;
   const month = new Date().toISOString().slice(0, 7), inMonth = S.spent.filter(e => e[0].slice(0, 7) === month);
-  $("spentList").innerHTML = (S.spent.length ? `<p style="margin:0 0 6px;font-size:14px">Овој месец: <b>${den(inMonth.reduce((t, e) => t + e[1], 0))}</b> во ${inMonth.length} ${inMonth.length === 1 ? "пазарење" : "пазарења"}.</p>` :
-    `<p class="note" style="margin:0">Запиши го износот по секое пазарење и ќе гледаш колку оди месечно.</p>`) +
-    S.spent.slice(-6).reverse().map(e => `<div class="item" style="grid-template-columns:minmax(0,1fr) auto auto"><span>${e[0].slice(8)}.${e[0].slice(5, 7)}.</span><span class="q">${den(e[1])}</span><button class="x" data-spent="${e[2]}" aria-label="Избриши го записот">×</button></div>`).join("");
+  $("spentList").innerHTML = (S.spent.length ? `<p style="margin:0 0 6px">Овој месец: <b>${den(inMonth.reduce((t, e) => t + e[1], 0))}</b> во ${inMonth.length} ${inMonth.length === 1 ? "пазарење" : "пазарења"}.</p>` :
+    `<p class="note">Запиши го износот по секое пазарење и ќе гледаш колку оди месечно.</p>`) +
+    S.spent.slice(-6).reverse().map(e => `<div class="srec"><span>${e[0].slice(8)}.${e[0].slice(5, 7)}.</span><span class="price">${den(e[1])}</span><button class="x" data-spent="${e[2]}" aria-label="Избриши го записот">${ic("x")}</button></div>`).join("");
 }
 function calc() {
   const v = id => +$(id).value, unit = $("calcUnit").value, per = unit === "парче" ? 1 : 1000, label = unit === "г" ? "1 кг" : unit === "мл" ? "1 л" : "1 парче", ok = x => isFinite(x) && x > 0;
@@ -589,28 +760,48 @@ function calc() {
 }
 
 // --- приказ: листа
+const cheapestAt = l => CHAINS.filter(c => l.offers[c]).sort((a, b) => l.offers[a].byUnit - l.offers[b].byUnit)[0];
 function renderList(R) {
-  const tills = R.stores.filter(s => !s.missing.length).map(s => s.till), saved = tills.length > 1 ? Math.max(...tills) - Math.min(...tills) : 0;
-  $("stores").innerHTML = R.lines.length ? R.stores.slice().sort((a, b) => (a.missing.length > 0) - (b.missing.length > 0) || a.till - b.till).map(s =>
+  const tills = R.stores.filter(s => !s.missing.length).map(s => s.till), spread = tills.length > 1 ? Math.max(...tills) - Math.min(...tills) : 0, bought = R.lines.filter(l => S.done.includes(l.id)).length;
+  $("listSub").textContent = R.lines.length ? `${R.lines.length} ставки · ${bought ? bought + " купени" : "подготвени за пазарење"}` : "Листата е празна";
+  $("bestStore").className = "best" + (R.best ? "" : " none"); $("bestStore").hidden = !R.lines.length;
+  $("bestStore").innerHTML = R.best ? `<div class="cap">Најевтино со сè</div><div class="store">${esc(LABEL[R.best])}</div><div class="bigprice xl"><b>${thousands(R.bestTill)}</b><span>ден. на каса</span></div><span class="tick">${ic("check")}</span>` +
+    `<button class="link" id="whereBtn" aria-expanded="${V.stores}">Каде да купам ${ic("arrow")}</button>` :
+    `<div class="cap">Каде да купам</div><div class="store" style="font-size:17px">Ниту еден маркет ја нема целата листа</div><button class="link" id="whereBtn" aria-expanded="${V.stores}">Спореди ги маркетите ${ic("arrow")}</button>`;
+  $("stores").hidden = !V.stores || !R.lines.length;
+  $("stores").innerHTML = R.stores.slice().sort((a, b) => (a.missing.length > 0) - (b.missing.length > 0) || a.till - b.till).map(s =>
     `<div class="row${s.missing.length ? " partial" : ""}"><span class="who">${esc(LABEL[s.chain])}${s.chain === R.best ? '<span class="tag good">најевтино со сè</span>' : ""}</span><span class="price">${den(s.till)}</span>` +
     `<span class="why">${s.missing.length ? "нема: " + esc(lower(s.missing.join(", "))) : "ја има целата листа, сметка на каса"}</span></div>`).join("") +
-    (saved > 0.5 ? `<p class="note">Разлика меѓу најевтиниот и најскапиот маркет со целата листа: ${den(saved)}</p>` : "") +
-    (R.split ? `<p class="note">Поделено на ${esc(LABEL[R.split.a])} (${R.split.n[0]} ставки) и ${esc(LABEL[R.split.b])} (${R.split.n[1]}): ${den(R.split.total)} за потрошеното.</p>` : "") : `<p class="note" style="margin:0">Листата е празна.</p>`;
-  const home = Object.entries(R.fromHome), regular = Object.keys(S.regular).length;
-  $("listTitle").textContent = `Листа за пазарење: ${R.lines.length} ставки`;
-  $("items").innerHTML = R.lines.slice().sort((a, b) => S.done.includes(a.id) - S.done.includes(b.id) || D.needs[a.id].name.localeCompare(D.needs[b.id].name, "mk")).map(l => {
-    const where = CHAINS.filter(c => l.offers[c]).sort((a, b) => l.offers[a].byUnit - l.offers[b].byUnit)[0], n = D.needs[l.id], done = S.done.includes(l.id);
-    const own = onList(l.id) ? `<button class="round small" data-own="${esc(l.id)}" data-step="-1" aria-label="Помалку">−</button><button class="round small" data-own="${esc(l.id)}" data-step="1" aria-label="Повеќе">+</button>` : "";
-    return `<label class="item${done ? " done" : ""}"><input type="checkbox" data-done="${esc(l.id)}" ${done ? "checked" : ""}><span class="n">${esc(n.name)}</span><span class="q">${amount(l.wanted, n.unit)}${own}</span>` +
-      `<span class="w">${where ? "најевтино: " + esc(LABEL[where]) + " · " + esc(lower(l.offers[where].name)) + (l.offers[where].promo ? " · акција " + l.offers[where].promo : "") : "нема цена"}${onList(l.id) ? ` · <button class="mini" data-reg="${esc(l.id)}" aria-pressed="${S.regular[l.id] != null}">секоја недела</button>` : ""}</span></label>`;
-  }).join("") + home.map(([id, q]) => `<div class="item home"><span></span><span class="n">${esc(D.needs[id].name)}</span><span class="q">${amount(q, D.needs[id].unit)}</span><span class="w">има дома од претходно</span></div>`).join("") ||
-    `<p class="note" style="margin:0">Додај ставки од „Цени" или состави мени.</p>`;
-  $("regular").innerHTML = `<h2 style="margin-bottom:6px">Секоја недела</h2>` + (regular ?
-    `<p style="margin:0 0 10px;font-size:14px">${regular} ${regular === 1 ? "ставка се додава" : "ставки се додаваат"} на листата секоја недела. Количината ја менуваш со − и + кај ставката.</p><button class="ghost" id="clearRegular">Тргни ги редовните</button>` :
-    `<p class="note" style="margin:0 0 10px">За леб, млеко, јајца и друго што се купува секоја недела. Допри „секоја недела" кај ставка што ја додаде, или почни со готов избор и поправи ги количините.</p><button class="ghost" id="addBasics">Додај основни намирници за ${S.people}</button>`);
-  const pantry = Object.entries(S.pantry);
-  $("pantry").innerHTML = `<h2 style="margin-bottom:6px">Дома имам</h2>` + (pantry.length ? `<p style="margin:0 0 10px;font-size:14px">${pantry.map(([id, q]) => esc(lower(D.needs[id] ? D.needs[id].name : id)) + " " + amount(q, D.needs[id] ? D.needs[id].unit : "кг")).join(", ")}</p><button class="ghost" id="emptyPantry">Испразни</button>` :
-    `<p class="note" style="margin:0">Ништо засега. По „Следна недела" тука се запишува што останало од купените пакувања.</p>`);
+    (spread > 0.5 ? `<div class="row"><span class="why">Разлика меѓу најевтиниот и најскапиот маркет со целата листа: ${den(spread)}</span></div>` : "") +
+    (R.split ? `<div class="row"><span class="why">Поделено на ${esc(LABEL[R.split.a])} (${R.split.n[0]} ставки) и ${esc(LABEL[R.split.b])} (${R.split.n[1]}): ${den(R.split.total)} за потрошеното.</span></div>` : "");
+  const groups = D.groups.filter(g => R.lines.some(l => D.needs[l.id].group === g));
+  $("items").innerHTML = groups.map((g, k) => `<div class="seclabel named"><span class="cap"><i style="background:${DOTS[k % DOTS.length]}"></i></span><b>${esc(g)}</b></div><section class="card flush">` +
+    R.lines.filter(l => D.needs[l.id].group === g).sort((a, b) => S.done.includes(a.id) - S.done.includes(b.id) || D.needs[a.id].name.localeCompare(D.needs[b.id].name, "mk")).map(l => {
+      const where = cheapestAt(l), n = D.needs[l.id], done = S.done.includes(l.id), id = esc(l.id);
+      const own = onList(l.id) ? `<span class="ownrow"><button class="round" data-own="${id}" data-step="-1" aria-label="Помалку">${ic("minus")}</button><button class="round" data-own="${id}" data-step="1" aria-label="Повеќе">${ic("plus")}</button>` +
+        `<button class="mini" data-reg="${id}" aria-pressed="${S.regular[l.id] != null}">секоја недела</button></span>` : "";
+      return `<label class="lrow${done ? " done" : ""}"><input class="cb" type="checkbox" data-done="${id}" ${done ? "checked" : ""}><span><b>${esc(n.name)}</b>` +
+        `<small>${where ? "Најевтино: " + esc(LABEL[where]) + " · " + esc(lower(l.offers[where].name)) + (l.offers[where].promo ? " · акција " + l.offers[where].promo : "") : "Нема цена"}</small>${own}</span><span class="qty">${amount(l.wanted, n.unit)}</span></label>`;
+    }).join("") + `</section>`).join("") +
+    (Object.keys(R.fromHome).length ? `<div class="seclabel named"><span class="cap"><i style="background:var(--line)"></i></span><b>Има дома</b></div><section class="card flush">` +
+      Object.entries(R.fromHome).map(([id, q]) => `<div class="lrow home"><span></span><span><b>${esc(D.needs[id].name)}</b><small>останато од претходно пазарење</small></span><span class="qty">${amount(q, D.needs[id].unit)}</span></div>`).join("") + `</section>` : "") ||
+    `<p class="note">Додај ставки од „Цени" или „Акции", или состави мени.</p>`;
+  $("clearDone").hidden = !bought;
+  const regular = Object.keys(S.regular).length, pantry = Object.entries(S.pantry);
+  $("regular").innerHTML = `<h2>Секоја недела</h2>` + (regular ?
+    `<p style="margin:0 0 12px">${regular} ${regular === 1 ? "ставка се додава" : "ставки се додаваат"} на листата секоја недела. Количината ја менуваш со минус и плус кај ставката.</p><button class="ghost wide" id="clearRegular">Тргни ги редовните</button>` :
+    `<p class="note" style="margin-bottom:12px">За леб, млеко, јајца и друго што се купува секоја недела. Допри „секоја недела" кај ставка што ја додаде, или почни со готов избор и поправи ги количините.</p><button class="soft wide" id="addBasics">Додај основни намирници за ${S.people}</button>`);
+  $("pantry").innerHTML = `<h2>Дома имам</h2>` + (pantry.length ? `<p style="margin:0 0 12px">${pantry.map(([id, q]) => esc(lower(D.needs[id] ? D.needs[id].name : id)) + " " + amount(q, D.needs[id] ? D.needs[id].unit : "кг")).join(", ")}</p><button class="ghost wide" id="emptyPantry">Испразни</button>` :
+    `<p class="note">Ништо засега. По „Следна недела" тука се запишува што останало од купените пакувања.</p>`);
+}
+function renderStore(R) {
+  const bought = R.lines.filter(l => S.done.includes(l.id)).length;
+  $("storeSub").textContent = `${bought} од ${R.lines.length} купени` + (R.best ? ` · ${LABEL[R.best]}` : "");
+  $("storeMeter").firstElementChild.style.width = (R.lines.length ? 100 * bought / R.lines.length : 0) + "%";
+  $("storeItems").innerHTML = R.lines.slice().sort((a, b) => S.done.includes(a.id) - S.done.includes(b.id) || D.groups.indexOf(D.needs[a.id].group) - D.groups.indexOf(D.needs[b.id].group) || D.needs[a.id].name.localeCompare(D.needs[b.id].name, "mk")).map(l => {
+    const done = S.done.includes(l.id);
+    return `<label class="srow${done ? " done" : ""}"><input class="cb" type="checkbox" data-done="${esc(l.id)}" ${done ? "checked" : ""}><b>${esc(D.needs[l.id].name)}</b><span class="qty">${amount(l.wanted, D.needs[l.id].unit)}</span></label>`;
+  }).join("") || `<p class="note" style="padding:18px">Листата е празна.</p>`;
 }
 function listText(R) {
   const out = ["Листа за пазарење (My Shopping)"];
@@ -619,16 +810,45 @@ function listText(R) {
   return out.join("\n");
 }
 
+// --- рамка: лента за главно дејство и навигација
+const TABS = [["menu", "Мени", "calendar"], ["promos", "Акции", "tag"], ["prices", "Цени", "search"], ["list", "Листа", "list"], ["tools", "Алатки", "sliders"]];
+const HOME = { dishes: "menu", store: "list" };
+function action(R) {
+  const n = R.lines.length;
+  if (S.tab === "menu") return `<button class="primary" id="next">Следна недела ${ic("arrow")}</button>`;
+  if (S.tab === "dishes") return `<button class="primary" data-go="menu">Готово</button>`;
+  if (S.tab === "promos" || S.tab === "prices") return `<button class="primary" data-go="list">Отвори ја листата (${n}) ${ic("arrow")}</button>`;
+  if (S.tab === "list") return n ? `<button class="primary" data-go="store">Во маркет</button><button class="roundbtn" id="copy" aria-label="Копирај ја листата">${ic("copy")}</button>` : "";
+  if (S.tab === "store") return `<button class="primary" data-go="list">Готово</button>`;
+  return "";
+}
+let wake = null;
+function theme() {
+  document.documentElement.dataset.theme = S.dark ? "dark" : "light";
+  const bar = document.querySelector('meta[name="theme-color"]'); if (bar) bar.content = S.dark ? "#17121D" : "#FEFCF8";
+}
 function render() {
-  $("stamp").textContent = D.city + " · цени од " + D.day;
-  for (const t of ["menu", "dishes", "promos", "prices", "list", "tools"]) $("view-" + t).hidden = S.tab !== t;
-  document.querySelectorAll("nav.tabs button").forEach(b => b.dataset.tab === (S.tab === "dishes" ? "menu" : S.tab) ? b.setAttribute("aria-current", "page") : b.removeAttribute("aria-current"));
+  $("stamp").textContent = D.city + " · цени од " + D.day.slice(0, 6);
+  for (const t of ["menu", "dishes", "promos", "prices", "list", "store", "tools"]) $("view-" + t).hidden = S.tab !== t;
+  const current = HOME[S.tab] || S.tab;
+  $("tabs").innerHTML = TABS.map(([id, label, icon]) => `<button data-tab="${id}"${id === current ? ' aria-current="page"' : ""}><span>${ic(icon)}</span>${label}</button>`).join("");
+  $("settingsBtn").setAttribute("aria-pressed", String(V.settings && S.tab === "menu"));
   const R = shop(); S.after = R.home; window.R = R;
-  if (S.tab === "menu") renderMenu(R); else if (S.tab === "dishes") renderDishes(); else if (S.tab === "promos") renderPromos(); else if (S.tab === "prices") renderPrices(); else if (S.tab === "tools") renderTools(); else renderList(R);
+  if (S.tab === "menu") renderMenu(R); else if (S.tab === "dishes") renderDishes(); else if (S.tab === "promos") renderPromos(); else if (S.tab === "prices") renderPrices();
+  else if (S.tab === "tools") renderTools(); else if (S.tab === "store") renderStore(R); else renderList(R);
+  const bar = action(R);
+  $("actionbar").hidden = !bar; $("actionbar").firstElementChild.innerHTML = bar; document.body.classList.toggle("noaction", !bar);
+  if (S.tab === "store" && !wake && navigator.wakeLock) navigator.wakeLock.request("screen").then(w => { wake = w; }, () => {});       // во маркет екранот не се гаси
+  if (S.tab !== "store" && wake) { wake.release().catch(() => {}); wake = null; }
   save();
 }
 function replan() { plan(); render(); }
+function copyList() {
+  const text = listText(window.R), box = $("copyText"), show = ok => { box.hidden = ok; if (ok) toast("Листата е копирана. Залепи ја во порака."); else { box.value = text; box.select(); box.scrollIntoView({ block: "center" }); } };
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(() => show(true), () => show(false)); else show(false);
+}
 
+$("logo").innerHTML = ic("basket"); $("settingsBtn").innerHTML = ic("sliders"); $("less").innerHTML = ic("minus"); $("more").innerHTML = ic("plus");
 $("budget").addEventListener("change", e => { S.budget = Math.max(300, Math.min(6000, +e.target.value || 1100)); replan(); });
 $("budgetRange").addEventListener("input", e => { S.budget = +e.target.value; $("budget").value = S.budget; });
 $("budgetRange").addEventListener("change", replan);
@@ -636,6 +856,7 @@ $("less").addEventListener("click", () => { if (S.people > 1) { S.people--; repl
 $("more").addEventListener("click", () => { if (S.people < 10) { S.people++; replan(); } });
 $("fasting").addEventListener("change", e => { S.fasting = e.target.checked; replan(); });
 $("thrifty").addEventListener("change", e => { S.thrifty = e.target.checked; replan(); });
+$("dark").addEventListener("change", e => { S.dark = e.target.checked; theme(); save(); });
 $("favs").addEventListener("click", e => { const d = e.target.dataset.fav; if (!d) return; S.favs = S.favs.includes(d) ? S.favs.filter(x => x !== d) : [...S.favs, d]; replan(); });
 $("menu").addEventListener("click", e => {
   const b = e.target.closest("button"); if (!b) return;
@@ -645,15 +866,20 @@ $("menu").addEventListener("click", e => {
   else if (b.dataset.pickday) { V.day = +b.dataset.pickday; S.tab = "dishes"; window.scrollTo({ top: 0 }); }
   render();
 });
-$("next").addEventListener("click", () => { for (const id of S.done) delete S.own[id]; S.history = [...S.history, S.menu].slice(-4); S.pantry = S.after || {}; S.week++; S.locked = {}; S.done = []; replan(); window.scrollTo({ top: 0, behavior: "smooth" }); });
-$("reset").addEventListener("click", () => { S = { ...fresh(), tab: S.tab, watch: S.watch, spent: S.spent, regular: S.regular, cards: S.cards }; replan(); });
 document.addEventListener("click", e => {
-  const t = e.target.closest("[data-tab],[data-go]"); if (t) { S.tab = t.dataset.tab || t.dataset.go; render(); window.scrollTo({ top: 0 }); return; }
+  const t = e.target.closest("[data-tab],[data-go]"); if (t) { S.tab = t.dataset.tab || t.dataset.go; $("toast").hidden = true; render(); window.scrollTo({ top: 0 }); return; }
   const b = e.target.closest("button"); if (!b) return;
-  if (b.dataset.pc !== undefined) { V.chain = b.dataset.pc; V.shown = 40; render(); }
-  else if (b.dataset.pg !== undefined) { V.group = b.dataset.pg; V.shown = 40; render(); }
+  if (b.id === "next") { for (const id of S.done) delete S.own[id]; S.history = [...S.history, S.menu].slice(-4); S.pantry = S.after || {}; S.week++; S.locked = {}; S.done = []; replan(); window.scrollTo({ top: 0, behavior: "smooth" }); }
+  else if (b.id === "reset") { S = { ...fresh(), tab: S.tab, watch: S.watch, spent: S.spent, regular: S.regular, cards: S.cards, dark: S.dark }; replan(); window.scrollTo({ top: 0 }); }
+  else if (b.id === "settingsBtn" || b.id === "editBudget") { V.settings = S.tab === "menu" ? !V.settings : true; S.tab = "menu"; render(); if (V.settings) $("settings").scrollIntoView({ block: "center", behavior: "smooth" }); }
+  else if (b.id === "copy") copyList();
+  else if (b.id === "whereBtn") { V.stores = !V.stores; render(); }
+  else if (b.id === "clearDone") { S.done = []; render(); }
+  else if (b.id === "morePromos") { V.shown += 40; render(); }
+  else if (b.dataset.pc !== undefined) { V.chain = b.dataset.pc; V.shown = 30; render(); }
+  else if (b.dataset.pg !== undefined) { V.group = b.dataset.pg; V.shown = 30; render(); }
   else if (b.dataset.ng !== undefined) { V.needGroup = V.needGroup === b.dataset.ng ? "" : b.dataset.ng; V.q = ""; $("q").value = ""; render(); }
-  else if (b.dataset.add) { const id = b.dataset.add; if (onList(id)) { delete S.own[id]; delete S.regular[id]; } else S.own[id] = pack(id); render(); }
+  else if (b.dataset.add) { const id = b.dataset.add; if (onList(id)) { delete S.own[id]; delete S.regular[id]; } else { S.own[id] = pack(id); toast(D.needs[id].name + " е на листата."); } render(); }
   else if (b.dataset.card) { S.cards[b.dataset.card] = S.cards[b.dataset.card] === false; reprice(S.cards); replan(); }
   else if (b.dataset.reg) { e.preventDefault(); const id = b.dataset.reg; if (S.regular[id] != null) { S.own[id] = S.regular[id]; delete S.regular[id]; } else { S.regular[id] = S.own[id] || pack(id); delete S.own[id]; } render(); }
   else if (b.id === "addBasics") { for (const [id, per] of BASICS) if (D.needs[id] && !onList(id)) S.regular[id] = D.needs[id].unit === "парче" ? Math.ceil(per * S.people) : Math.max(0.25, Math.round(per * S.people * 4) / 4); render(); }
@@ -666,25 +892,20 @@ document.addEventListener("click", e => {
   else if (b.dataset.fav2) { const d = b.dataset.fav2; S.favs = S.favs.includes(d) ? S.favs.filter(x => x !== d) : [...S.favs, d]; replan(); }
   else if (b.dataset.put) { put(V.day, b.dataset.put); V.day = nextFree((V.day + 1) % 7); replan(); }
   else if (b.id === "clearPicks") { S.locked = {}; replan(); }
-  else if (b.dataset.watch) { const id = b.dataset.watch; if (S.watch[id]) delete S.watch[id]; else S.watch[id] = { p: minUnit[id], d: D.day.slice(0, 6) }; render(); }
+  else if (b.dataset.watch) { const id = b.dataset.watch; if (S.watch[id]) delete S.watch[id]; else { S.watch[id] = { p: minUnit[id], d: D.day.slice(0, 6) }; toast("Ја следиш цената: " + lower(D.needs[id].name) + "."); } render(); }
   else if (b.dataset.have) { const id = b.dataset.have; S.have = S.have.includes(id) ? S.have.filter(x => x !== id) : [...S.have, id]; render(); }
-  else if (b.dataset.cook) { const scale = S.people / PORTIONS; for (const [id, q] of D.dishes[b.dataset.cook].parts) if (!S.have.includes(id)) S.own[id] = Math.round(((S.own[id] || 0) + q * scale) * 100) / 100; b.textContent = "на листа ✓"; b.disabled = true; save(); }
+  else if (b.dataset.cook) { const scale = S.people / PORTIONS; for (const [id, q] of D.dishes[b.dataset.cook].parts) if (!S.have.includes(id)) S.own[id] = Math.round(((S.own[id] || 0) + q * scale) * 100) / 100; b.innerHTML = ic("check") + "На листа"; b.classList.add("done"); b.disabled = true; save(); }
   else if (b.dataset.spent) { S.spent = S.spent.filter(e => String(e[2]) !== b.dataset.spent); render(); }
   else if (b.id === "spentAdd") { const v = +$("spentIn").value; if (v > 0) { S.spent = [...S.spent, [new Date().toISOString().slice(0, 10), Math.round(v), Date.now()]].slice(-60); $("spentIn").value = ""; render(); } }
 });
-$("morePromos").addEventListener("click", () => { V.shown += 60; render(); });
-$("onlyBest").addEventListener("change", e => { V.best = e.target.checked; V.shown = 40; render(); });
-$("noCard").addEventListener("change", e => { V.noCard = e.target.checked; V.shown = 40; render(); });
+document.addEventListener("change", e => { const id = e.target.dataset && e.target.dataset.done; if (!id) return; S.done = e.target.checked ? [...S.done, id] : S.done.filter(x => x !== id); render(); });
+$("onlyBest").addEventListener("change", e => { V.best = e.target.checked; V.shown = 30; render(); });
+$("noCard").addEventListener("change", e => { V.noCard = e.target.checked; V.shown = 30; render(); });
 for (const id of ["caP", "caQ", "cbP", "cbQ", "calcUnit"]) $(id).addEventListener("input", calc);
 $("dq").addEventListener("input", e => { V.dq = e.target.value; renderDishes(); });
 $("q").addEventListener("input", e => { V.q = e.target.value; V.needGroup = ""; renderPrices(); });
-$("items").addEventListener("change", e => { const id = e.target.dataset.done; if (!id) return; S.done = e.target.checked ? [...S.done, id] : S.done.filter(x => x !== id); render(); });
-$("clearDone").addEventListener("click", () => { S.done = []; render(); });
-$("copy").addEventListener("click", () => {
-  const text = listText(window.R), box = $("copyText"), show = ok => { $("copied").hidden = !ok; box.hidden = ok; if (!ok) { box.value = text; box.select(); } };
-  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(() => show(true), () => show(false)); else show(false);
-});
 
+theme();
 if (!S.menu || S.menu.length !== 7 || S.menu.some(d => !D.dishes[d])) plan();
 render();
 </script>

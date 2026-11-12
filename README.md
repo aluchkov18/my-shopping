@@ -102,4 +102,8 @@ python -m planner.menu 1100 4 --posno --omileni planner/omileni.txt --lista
 
 ```
 python prototype/build.py <излез.html> 11.11.2026     # шаблонот со вметнати денешни цени
+python prototype/build.py --site _site                # цела страница за GitHub Pages, со икони, фонтови и работа без мрежа
+node tests/browser/flow.js                            # прошетка низ сите екрани во прелистувач (бара playwright)
 ```
+
+Изгледот е „Fresh v02": Manrope за наслови и цени, Nunito Sans за текст, виолетова за главни дејства, лаванда за буџетот, свеж зелен акцент за избраното и најевтиното, праска за попуст. Светлиот изглед е основен; темниот е пробен и се вклучува во Поставки. Фонтовите (SIL OFL) и иконите (Lucide, ISC) се во `prototype/site`, заедно со нивните лиценци, па страницата не бара ништо од друга адреса.

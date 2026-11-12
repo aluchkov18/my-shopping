@@ -8,6 +8,7 @@
 import glob
 import json
 import os
+import re
 import shutil
 import sys
 
@@ -22,12 +23,14 @@ HEAD = """<!doctype html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex">
-<meta name="theme-color" content="#5b2a86">
+<meta name="theme-color" content="#FEFCF8">
+<meta name="color-scheme" content="light">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
 <style>html { -webkit-text-size-adjust: 100%; } body { margin: 0; }</style>
 """
+FONTS = re.compile(r'<link rel="stylesheet" href="https://fonts\.googleapis\.com/[^"]*">')
 TAIL = """<script>if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});</script>
 </body>
 </html>
@@ -50,11 +53,12 @@ def fragment(day: str) -> str:
 def site(folder: str, day: str) -> str:
     os.makedirs(folder, exist_ok=True)
     head, body = fragment(day).split("</style>", 1)          # наслов, фонтови и стилови одат во главата
+    head, swapped = FONTS.subn('<link rel="stylesheet" href="fonts.css">', head)      # фонтовите се во папката, па страницата изгледа исто и без мрежа
+    assert swapped == 1
     path = os.path.join(folder, "index.html")
     with open(path, "w", encoding="utf-8") as fh:
         fh.write(HEAD + head + "</style>\n</head>\n<body>" + body + TAIL)
-    for name in os.listdir(os.path.join(here, "site")):
-        shutil.copy(os.path.join(here, "site", name), os.path.join(folder, name))
+    shutil.copytree(os.path.join(here, "site"), folder, dirs_exist_ok=True)
     return path
 
 
