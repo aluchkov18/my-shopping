@@ -3,14 +3,22 @@
     python -m planner.menu 1200 4                          # буџет (ден.) за седум главни јадења, број на членови
     python -m planner.menu 1200 4 --posno                  # среда и петок посно
     python -m planner.menu 1200 4 --omileni planner/omileni.txt
+    python -m planner.menu 1200 4 --sostojba doma.json --zacuvaj   # памти што се јадело и што останало дома
 
 Избира седум различни главни јадења што се вклопуваат во буџетот, со најмногу две од ист вид
 (пилешко, мелено месо, грав...). Меѓу менијата што се вклопуваат: прво она со повеќе омилени
 јадења (до три неделно), па поразновидното, па побогатото. Потоа ги собира состојките во една
 листа и ја пресметува кај секој синџир. Сè е пресметка од ценовниците; ниту една цена не е проценета.
+
+Со состојба (--sostojba): јадењата од минатата недела не се повторуваат (другите три недели, освен
+омилените), а она што останало дома
+од купените пакувања (масло, брашно, јајца) се одзема од новата листа. Свежо месо, риба, овошје и
+зеленчук не се пренесуваат во следната недела.
 """
 from __future__ import annotations
 
+import json
+import os
 import random
 import sys
 from collections import Counter
@@ -26,10 +34,14 @@ FASTING_DAYS = (2, 4)                    # среда и петок
 MAX_FAVOURITES = 3
 
 
-def choose(budget: float, people: int, favourites: frozenset = frozenset(), fasting: bool = False, days: int = 7) -> dict:
+PERISHABLE = {"Месо и риба", "Зеленчук и овошје"}     # не се пренесува во оставата
+
+
+def choose(budget: float, people: int, favourites: frozenset = frozenset(), fasting: bool = False, days: int = 7,
+           avoid: frozenset = frozenset()) -> dict:
     scale = people / PORTIONS
     priced = {r["dish"]: r["mixed"] * scale for r in cost() if r["mixed"] is not None and KIND[r["dish"]] != "прилог"}
-    dishes = sorted(priced)
+    dishes = sorted(d for d in priced if d not in avoid)
     lean = len(FASTING_DAYS) if fasting else 0
 
     def valid(menu) -> bool:
@@ -51,7 +63,7 @@ def choose(budget: float, people: int, favourites: frozenset = frozenset(), fast
 
     # Пребарување: од повеќе почетни менија, заменувај по едно јадење додека има подобрување.
     rng, best = random.Random(0), list(cheapest)
-    for start in range(40):
+    for start in range(12):
         menu = list(cheapest) if start == 0 else rng.sample(dishes, days)
         if not valid(menu):
             continue
@@ -100,10 +112,34 @@ def shopping(menu: list[str], scale: float) -> list[tuple[str, float]]:
     return [(need_id, round(qty, 2)) for need_id, qty in total.items()]
 
 
-def plan(budget: float, people: int, favourites: frozenset = frozenset(), fasting: bool = False) -> dict:
-    chosen = choose(budget, people, favourites, fasting)
-    basket = shopping(chosen["menu"], chosen["scale"])
-    return {**chosen, "basket": basket, "priced": price(basket)}
+def plan(budget: float, people: int, favourites: frozenset = frozenset(), fasting: bool = False, state: dict | None = None) -> dict:
+    state = state or {"history": [], "pantry": {}}
+    # Минатонеделните јадења не се повторуваат; останатите од последните три недели само ако се омилени.
+    recent = state["history"][-3:]
+    avoid = frozenset(d for week in recent[:-1] for d in week if d not in favourites) | frozenset(recent[-1] if recent else ())
+    chosen = choose(budget, people, favourites, fasting, avoid=avoid)
+    pantry, to_buy, from_pantry = dict(state["pantry"]), [], {}
+    for need_id, qty in shopping(chosen["menu"], chosen["scale"]):
+        have = min(qty, pantry.get(need_id, 0))
+        if have > 0:
+            from_pantry[need_id] = round(have, 2)
+            pantry[need_id] = pantry[need_id] - have
+        if qty - have > 0.005:
+            to_buy.append((need_id, round(qty - have, 2)))
+    priced = price(to_buy)
+    lines = priced["lines"]
+    # Каде се купува: синџирот што има сè и е најевтин на каса; ако нема таков, секоја ставка каде што е најевтина.
+    full = {c: sum(l["offers"][c]["cost"] for l in lines) for c in CHAINS if all(l["offers"][c] for l in lines)}
+    store = min(full, key=full.get) if full else None
+    group = {n.id: n.group for n in NEEDS}
+    for l in lines:
+        bought = l["offers"][store] if store else min((o for o in l["offers"].values() if o), key=lambda o: o["cost"], default=None)
+        if bought and group[l["need"]] not in PERISHABLE and bought["got"] - l["wanted"] > 0.005:
+            pantry[l["need"]] = pantry.get(l["need"], 0) + bought["got"] - l["wanted"]
+    new_state = {"history": (state["history"] + [chosen["menu"]])[-4:],
+                 "pantry": {k: round(v, 2) for k, v in pantry.items() if v > 0.005}}
+    return {**chosen, "basket": to_buy, "priced": priced, "from_pantry": from_pantry, "store": store,
+            "till": round(full[store]) if store else None, "state": new_state}
 
 
 def main(argv: list[str]) -> int:
@@ -115,7 +151,13 @@ def main(argv: list[str]) -> int:
         unknown = favourites - set(RECIPES)
         if unknown:
             print("Не ги знам овие јадења:", ", ".join(sorted(unknown)))
-    result = plan(budget, people, favourites, "--posno" in argv)
+    state, path = None, None
+    if "--sostojba" in argv:
+        path = argv[argv.index("--sostojba") + 1]
+        if os.path.exists(path):
+            with open(path, encoding="utf-8") as fh:
+                state = json.load(fh)
+    result = plan(budget, people, favourites, "--posno" in argv, state)
     lines, single = result["priced"]["lines"], result["priced"]["single"]
     if not result["fits"]:
         print(f"Буџетот од {budget:g} ден. не стига. Најевтиното мени со вакви правила чини {result['cheapest_possible']} ден.\n")
@@ -124,6 +166,10 @@ def main(argv: list[str]) -> int:
         marks = ("  омилено" if dish in favourites else "") + ("  посно" if dish in POSNO else "")
         print(f"  {day:11} {dish[:34]:34} {result['dish_cost'][dish]:>5} ден.{marks}")
     print(f"  вкупно за потрошеното: {sum(result['dish_cost'].values())} ден.\n")
+    names = {n.id: (n.name, n.unit) for n in NEEDS}
+    if result["from_pantry"]:
+        print("Од дома (останато од претходно): "
+              + ", ".join(f"{names[k][0].lower()} {v:g} {names[k][1]}" for k, v in result["from_pantry"].items()) + "\n")
     if "--lista" in argv:
         print("Листа за пазарење:")
         for l in sorted(lines, key=lambda l: l["name"]):
@@ -139,6 +185,12 @@ def main(argv: list[str]) -> int:
     for s in result["priced"]["split"][:2]:
         a, b = s["chains"]
         print(f"  {LABEL[a]} + {LABEL[b]}: {s['total']} ден. за потрошеното ({s['items'][a]} ставки + {s['items'][b]})")
+    if path and "--zacuvaj" in argv:
+        with open(path, "w", encoding="utf-8") as fh:
+            json.dump(result["state"], fh, ensure_ascii=False, indent=1)
+        left = result["state"]["pantry"]
+        print(f"\nЗачувано во {path}. Дома останува: "
+              + (", ".join(f"{names[k][0].lower()} {v:g} {names[k][1]}" for k, v in left.items()) or "ништо"))
     return 0
 
 

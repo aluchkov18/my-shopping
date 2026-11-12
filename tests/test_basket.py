@@ -49,3 +49,14 @@ def test_menu_order_and_shopping_list():
     basket = dict(shopping(["Тавче гравче", "Леќа чорба"], 1.5))
     assert basket["grav"] == 0.75 and abs(basket["kromid"] - 0.675) < 0.01 and basket["lekja"] == 0.6
     assert set(KIND) >= {"Мусака", "Шопска салата"}
+
+
+def test_menu_remembers_last_week_and_the_pantry(tmp_path):
+    from planner.menu import plan
+    first = plan(1100, 4)
+    second = plan(1100, 4, state=first["state"])
+    assert not set(first["menu"]) & set(second["menu"])                      # ништо не се повторува
+    assert first["state"]["history"] == [first["menu"]]
+    used = second["from_pantry"]
+    assert all(first["state"]["pantry"].get(k, 0) >= v for k, v in used.items())
+    assert all(v >= 0 for v in second["state"]["pantry"].values())

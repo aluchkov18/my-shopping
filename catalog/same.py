@@ -19,6 +19,7 @@
 from __future__ import annotations
 
 import csv
+import functools
 import os
 import random
 import re
@@ -84,8 +85,9 @@ def features(name: str) -> tuple[frozenset, frozenset]:
     return words, numbers
 
 
+@functools.lru_cache(maxsize=1)
 def collect() -> dict[str, dict[str, list[dict]]]:
-    """Производите по потреба и синџир, со количина и цена по единица."""
+    """Производите по потреба и синџир, со количина и цена по единица. Се чита еднаш по извршување."""
     products = load_products()
     taken, out = {}, {}
     for need in NEEDS:
