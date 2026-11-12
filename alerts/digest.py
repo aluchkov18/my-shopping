@@ -31,11 +31,19 @@ def money(value: float) -> str:
 def compose(moved: list[dict], promos: list[dict], watch: list[str], day: str) -> tuple[str, str] | None:
     """(наслов, текст) или None. moved се промените од catalog.history.changes, promos од catalog.promos.build."""
     needs, chosen = {n.id: n for n in NEEDS}, set(watch)
+    deal = {(p["chain"], p["name"]): p for p in promos}
+
+    def when(p: dict | None) -> str:
+        """„од 11.11. до 24.11." за акција со познат рок."""
+        short = lambda day: f"{day[8:]}.{day[5:7]}."
+        if not p or not p.get("until"):
+            return ""
+        return (f"од {short(p['since'])} " if p.get("since") else "") + f"до {short(p['until'])}"
 
     def row(c: dict) -> str:
         need = needs[c["need"]]
         return (f"• {need.name}: {money(c['old'])} → {money(c['new'])} ден. за 1 {need.unit}, {LABEL[c['chain']]}"
-                + (" (акција)" if c["promo"] else ""))
+                + ((" (акција " + when(deal.get((c["chain"], c["name"]))) + ")").replace(" )", ")") if c["promo"] else ""))
 
     known = [c for c in moved if c["need"] in needs and c.get("sure", True)]
     down = [c for c in known if c["need"] in chosen and c["pct"] < 0]
@@ -53,7 +61,7 @@ def compose(moved: list[dict], promos: list[dict], watch: list[str], day: str) -
         parts.append("Уште во градот:\n" + "\n".join(row(c) for c in city))
     if ending:
         parts.append("Акцијата истекува:\n" + "\n".join(
-            f"• {p['name'].capitalize()}: {money(p['price'])} ден., {LABEL[p['chain']]} ({'денес' if p['until'] == day else 'утре'})"
+            f"• {p['name'].capitalize()}: {money(p['price'])} ден., {LABEL[p['chain']]} ({when(p)}, истекува {'денес' if p['until'] == day else 'утре'})"
             for p in ending))
     if not parts:
         return None

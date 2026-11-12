@@ -19,7 +19,7 @@ def test_promo_is_checked_against_the_city_and_the_same_product():
     out = {p["name"]: p for p in judge(rows, data, [[a, c]])}
     assert set(out) == {"МЛЕКО А 1л", "ЧОКОЛАДО", "МЛЕКО В 1л"}              # попуст под 5% не е акција
     milk = out["МЛЕКО А 1л"]
-    assert milk["pct"] == 27 and milk["card"] and milk["until"] == "2026-11-24" and milk["need"] == "mleko-trajno"
+    assert milk["pct"] == 27 and milk["card"] and milk["since"] == "2026-11-11" and milk["until"] == "2026-11-24" and milk["need"] == "mleko-trajno"
     assert not milk["cheapest"] and milk["elsewhere"] == ("stokomak", 38)      # истото млеко е поевтино кај Стокомак и без акција
     assert out["ЧОКОЛАДО"]["need"] == "" and out["ЧОКОЛАДО"]["group"] == "Друго" and not out["ЧОКОЛАДО"]["card"]
     assert not out["МЛЕКО В 1л"]["cheapest"] and out["МЛЕКО В 1л"]["until"] == ""

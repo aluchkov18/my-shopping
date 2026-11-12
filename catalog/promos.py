@@ -2,7 +2,7 @@
 
     python -m catalog.promos            # преглед + catalog/promos.csv
 
-За секој производ на акција: редовна и акциска цена, попуст, до кога важи и дали бара картичка.
+За секој производ на акција: синџир, редовна и акциска цена, попуст, од кога до кога важи и дали бара картичка.
 Две проверки што синџирот не ги кажува:
   - дали акциската цена по единица е најниска во градот за таа потреба (најевтино млеко, не само поевтино)
   - колку чини истиот производ кај другите синџири, ако го имаат
@@ -32,10 +32,18 @@ def raw() -> dict[str, dict[tuple, dict]]:
             with open(path, encoding="utf-8", newline="") as fh:
                 for r in csv.DictReader(fh):
                     key = (r["name"], r["description"])
-                    if float(r["price"] or 0) > 0 and (key not in best or float(r["price"]) < float(best[key]["price"])):
-                        best[key] = r
-        out[chain] = best
+                    rank = (r.get("seen") or "", -float(r["price"] or 0))        # последно прочитаниот, па поевтиниот
+                    if float(r["price"] or 0) > 0 and (key not in best or rank > best[key][0]):
+                        best[key] = (rank, r)
+        out[chain] = {key: r for key, (_, r) in best.items()}
     return out
+
+
+def span(period: str) -> tuple[str, str]:
+    """(од, до) како ГГГГ-ММ-ДД од „11.11.2026 до 24.11.2026"; празно каде што датумот го нема."""
+    dates = _DATE.findall(period or "")
+    day = lambda d: "-".join(reversed(d))
+    return (day(dates[0]) if len(dates) > 1 else "", day(dates[-1]) if dates else "")
 
 
 def build() -> list[dict]:
@@ -66,10 +74,9 @@ def judge(rows_by_chain: dict, data: dict, groups: list) -> list[dict]:
             pct = round(100 * (1 - price / regular))
             if not 5 <= pct <= 80:
                 continue
-            dates = _DATE.findall(r["promo_period"])
-            until = "-".join(reversed(dates[-1])) if dates else ""
+            since, until = span(r["promo_period"])
             need_id, hit = index.get((chain, name, description), (None, None))
-            item = {"chain": chain, "name": name, "description": description, "price": price, "regular": regular, "pct": pct, "until": until,
+            item = {"chain": chain, "name": name, "description": description, "price": price, "regular": regular, "pct": pct, "since": since, "until": until,
                     "card": bool(CARD.search(r["promo_type"])), "need": need_id or "", "group": names[need_id].group if need_id else "Друго",
                     "unit_price": None, "cheapest": False, "elsewhere": None}
             if hit and hit["unit_price"] and hit["trust"] >= 2 and not hit.get("outlier"):
@@ -95,10 +102,10 @@ def main(argv: list[str]) -> int:
         print(f"  {LABEL[p['chain']][:1]} -{p['pct']:>2}%  {p['regular']:>5g} -> {p['price']:>5g}  {p['name'][:46]}")
     with open(os.path.join(ROOT, "catalog", "promos.csv"), "w", encoding="utf-8", newline="") as fh:
         w = csv.writer(fh, lineterminator="\n")
-        w.writerow(["chain", "name", "regular", "price", "pct", "until", "card", "need", "unit_price", "cheapest_for_need",
+        w.writerow(["chain", "name", "regular", "price", "pct", "since", "until", "card", "need", "unit_price", "cheapest_for_need",
                     "same_product_chain", "same_product_price"])
         for p in items:
-            w.writerow([p["chain"], p["name"], f"{p['regular']:g}", f"{p['price']:g}", p["pct"], p["until"], int(p["card"]), p["need"],
+            w.writerow([p["chain"], p["name"], f"{p['regular']:g}", f"{p['price']:g}", p["pct"], p["since"], p["until"], int(p["card"]), p["need"],
                         "" if p["unit_price"] is None else f"{p['unit_price']:g}", int(p["cheapest"]),
                         p["elsewhere"][0] if p["elsewhere"] else "", f"{p['elsewhere'][1]:g}" if p["elsewhere"] else ""])
     return 0

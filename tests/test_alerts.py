@@ -14,15 +14,16 @@ def test_watch_list_uses_known_needs():
 
 
 def test_message_says_what_moved_for_the_watched_needs():
-    moved = [move("mleko-trajno", 47, 43, promo=True), move("pivo", 100, 80, "zito"), move("seker", 60, 66, "zito"), move("kola", 50, 48)]
-    promos = [{"need": "oriz", "cheapest": True, "until": "2026-11-13", "name": "ОРИЗ 1кг", "price": 60, "chain": "ramstore"},
+    moved = [{**move("mleko-trajno", 47, 43, promo=True), "name": "МЛЕКО К"}, move("pivo", 100, 80, "zito"), move("seker", 60, 66, "zito"), move("kola", 50, 48)]
+    promos = [{"need": "oriz", "cheapest": True, "since": "2026-10-22", "until": "2026-11-13", "name": "ОРИЗ 1кг", "price": 60, "chain": "ramstore"},
+              {"need": "mleko-trajno", "cheapest": True, "since": "2026-11-09", "until": "2026-11-23", "name": "МЛЕКО К", "price": 43, "chain": "kam"},
               {"need": "oriz", "cheapest": False, "until": "2026-11-13", "name": "ОРИЗ ДРУГ", "price": 90, "chain": "zito"},
               {"need": "pivo", "cheapest": True, "until": "2026-11-12", "name": "ПИВО", "price": 40, "chain": "zito"}]
     title, body = compose(moved, promos, ["mleko-trajno", "seker", "oriz"], "2026-11-12")
     assert title == "Велес 12.11.: поевтино 1, поскапо 1"
-    assert "• Трајно млеко: 47 → 43 ден. за 1 л, КАМ (акција)" in body and "• Шеќер: 60 → 66 ден. за 1 кг, Жито" in body
+    assert "• Трајно млеко: 47 → 43 ден. за 1 л, КАМ (акција од 09.11. до 23.11.)" in body and "• Шеќер: 60 → 66 ден. за 1 кг, Жито" in body
     assert "Уште во градот:\n• Пиво" in body and "Кола" not in body            # колата не се следи и падот е мал
-    assert "• Ориз 1кг: 60 ден., Рамстор (утре)" in body and "ДРУГ" not in body and "Пиво: 40" not in body
+    assert "• Ориз 1кг: 60 ден., Рамстор (од 22.10. до 13.11., истекува утре)" in body and "ДРУГ" not in body and "Пиво: 40" not in body
 
 
 def test_no_news_means_no_message():

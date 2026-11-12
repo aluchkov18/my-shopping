@@ -160,7 +160,7 @@ def load_products() -> dict[str, list[dict]]:
                     seen = r.get("seen") or ""
                     if price > 0 and (key not in best or (seen, -price) > (best[key]["seen"], -best[key]["price"])):
                         best[key] = {"name": r["name"], "description": r["description"], "price": price, "seen": seen,
-                                     "regular": r["regular_price"], "promo": bool(r["discount_price"]),
+                                     "regular": r["regular_price"], "promo": bool(r["discount_price"]), "period": r["promo_period"],
                                      "unit": r["unit_price"]}
         out[chain] = list(best.values())
     return out

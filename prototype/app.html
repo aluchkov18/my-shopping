@@ -275,12 +275,14 @@ function amount(q, unit) {
   return num(Math.ceil(q - 1e-9)) + " парч.";
 }
 const lower = s => s.toLowerCase();
+const dm = day => day.slice(8) + "." + day.slice(5, 7) + ".";
+const when = span => { const [a, b] = (span || "/").split("/"); return b ? (a ? "од " + dm(a) + " " : "") + "до " + dm(b) : "без наведен рок"; };      // „од 11.11. до 24.11."
 const LOCK = '<svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><rect x="3" y="7" width="10" height="7" rx="1.5" fill="currentColor"/><path d="M5 7V5a3 3 0 0 1 6 0v2" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>';
 
 // --- цени. Акција со картичка важи само кај маркетите каде купувачот има картичка; инаку се брои редовната цена.
 const RAW = Object.fromEntries(Object.entries(D.needs).map(([id, n]) => [id, { ...n.offers }]));
 const CARD_CHAINS = CHAINS.filter(c => Object.values(RAW).some(o => o[c].some(r => r[4] === 2)));
-const minUnit = {}, minChain = {}, needPromo = {}, saveUnit = {};      // saveUnit: колку е поевтино по единица отколку без ниту една акција во градот
+const minUnit = {}, minChain = {}, needPromo = {}, needSpan = {}, saveUnit = {};      // saveUnit: колку е поевтино по единица отколку без ниту една акција во градот
 function reprice(cards) {
   for (const [id, need] of Object.entries(D.needs)) {
     let best = null, plain = Infinity;
@@ -290,7 +292,7 @@ function reprice(cards) {
       if (rows[0] && (!best || rows[0][2] < best.r[2])) best = { r: rows[0], c };
       for (const r of rows) { const u = r[4] && r[5] ? r[2] * r[5] / r[1] : r[2]; if (u < plain) plain = u; }
     }
-    minUnit[id] = best ? best.r[2] : null; minChain[id] = best ? best.c : null; needPromo[id] = best ? !!best.r[4] : false;
+    minUnit[id] = best ? best.r[2] : null; minChain[id] = best ? best.c : null; needPromo[id] = best ? !!best.r[4] : false; needSpan[id] = best && best.r[4] ? best.r[6] || "" : "";
     saveUnit[id] = best ? Math.max(0, plain - best.r[2]) : 0;
   }
 }
@@ -303,10 +305,10 @@ function pack(id) {
 const BASICS = [["leb-bel", 0.6], ["mleko-trajno", 1], ["jajca", 3], ["jogurt", 0.5], ["sirenje-belo", 0.125], ["kafe-meleno", 0.05], ["seker", 0.125]];   // неделно по член, проценка
 function offer(id, chain, wanted) {
   let best = null, lowest = Infinity;
-  for (const [name, price, unit, size] of D.needs[id].offers[chain]) {
+  for (const [name, price, unit, size, promo, , span] of D.needs[id].offers[chain]) {
     const packs = size == null ? null : Math.max(1, Math.ceil(wanted / size - 1e-9));
     const cost = size == null ? unit * wanted : packs * price, got = size == null ? wanted : packs * size;
-    if (!best || cost < best.cost) best = { name, cost, packs, got };
+    if (!best || cost < best.cost) best = { name, cost, packs, got, promo: promo ? when(span) : "" };
     if (unit < lowest) lowest = unit;
   }
   if (best) best.byUnit = lowest * wanted;
@@ -447,7 +449,7 @@ function renderMenu(R) {
   if (over) $("alert").textContent = DAYS.some((_, i) => isMine(i)) ? `Со твоите избори менито излегува ${den(total)} Тоа е ${den(total - S.budget)} над буџетот.` : `Буџетот не стига за седум јадења. Најевтиното мени за ${S.people} чини ${den(S.cheapest)}`;
   $("menu").innerHTML = S.menu.map((d, i) => {
     const tags = (S.favs.includes(d) ? '<span class="tag">омилено</span>' : "") + (D.dishes[d].posno ? '<span class="tag good">посно</span>' : "") + saveTag(dishSave(d, scale));
-    const parts = S.open === i ? `<div class="parts">${D.dishes[d].parts.map(([id, q]) => `<span><span>${esc(lower(D.needs[id].name))}${needPromo[id] ? " · акција во " + esc(LABEL[minChain[id]]) : ""}</span><span>${amount(q * scale, D.needs[id].unit)}</span></span>`).join("")}` +
+    const parts = S.open === i ? `<div class="parts">${D.dishes[d].parts.map(([id, q]) => `<span><span>${esc(lower(D.needs[id].name))}${needPromo[id] ? " · акција во " + esc(LABEL[minChain[id]]) + ", " + when(needSpan[id]) : ""}</span><span>${amount(q * scale, D.needs[id].unit)}</span></span>`).join("")}` +
       `<button class="ghost" data-pickday="${i}" style="width:100%;margin-top:8px;padding:8px">Избери друго од листата</button></div>` : "";
     return `<div class="day"><span class="d">${DAYS[i]}</span><button class="dishbtn" data-open="${i}" aria-expanded="${S.open === i}"><b>${esc(d)}</b>${tags ? `<span class="tags">${tags}</span>` : ""}</button>` +
       `<span class="price">${den(dishCost(d, scale))}</span><button class="icon" data-swap="${i}" aria-label="Друго јадење за ${DAYS[i]}">↻</button>` +
@@ -488,7 +490,7 @@ function renderDishes() {
   $("dishList").innerHTML = list.map(d => {
     const at = S.menu.indexOf(d), fav = S.favs.includes(d), open = V.openDish === d;
     const tags = (D.dishes[d].posno ? '<span class="tag good">посно</span>' : "") + (at >= 0 ? `<span class="tag">${isMine(at) ? "избрано" : "предлог"}: ${DAYS[at]}</span>` : "") + saveTag(dishSave(d, scale)) + (last.includes(d) ? '<span class="tag warn">минатата недела</span>' : "");
-    const parts = open ? `<div class="parts">${D.dishes[d].parts.map(([id, qty]) => `<span><span>${esc(lower(D.needs[id].name))}, ${amount(qty * scale, D.needs[id].unit)}</span><span>${den(qty * scale * minUnit[id])}</span></span>`).join("")}</div>` : "";
+    const parts = open ? `<div class="parts">${D.dishes[d].parts.map(([id, qty]) => `<span><span>${esc(lower(D.needs[id].name))}, ${amount(qty * scale, D.needs[id].unit)}${needPromo[id] ? " · акција во " + esc(LABEL[minChain[id]]) + ", " + when(needSpan[id]) : ""}</span><span>${den(qty * scale * minUnit[id])}</span></span>`).join("")}</div>` : "";
     return `<div class="dish"><button class="icon" data-fav2="${esc(d)}" aria-pressed="${fav}" aria-label="Омилено: ${esc(d)}">${fav ? "♥" : "♡"}</button>` +
       `<button class="dishbtn" data-dopen="${esc(d)}" aria-expanded="${open}"><b>${esc(d)}</b>${tags ? `<span class="tags">${tags}</span>` : ""}</button><span class="price">${den(dishCost(d, scale))}</span>${parts}` +
       `<span class="meta"><span>${esc(D.dishes[d].kind)} · ${D.dishes[d].parts.length} состојки</span>${at === V.day ? `<span class="tag good">за ${DAYS_FULL[V.day]} ✓</span>` : `<button class="add" data-put="${esc(d)}">За ${DAYS_FULL[V.day]}</button>`}</span></div>`;
@@ -499,11 +501,11 @@ function renderDishes() {
 const promoCard = p => {
   const tags = (p.best ? `<span class="tag good">најевтино во ${esc(D.city)}: ${esc(lower(D.needs[p.need].name))}</span>` : "") + (p.card ? '<span class="tag">со картичка</span>' : "") +
     (p.else ? (p.else[1] < p.price ? `<span class="tag warn">истото кај ${esc(LABEL[p.else[0]])}: ${den(p.else[1])}</span>` : p.else[1] > p.price ? `<span class="tag good">кај ${esc(LABEL[p.else[0]])} е ${den(p.else[1])}</span>` : `<span class="tag">иста цена кај ${esc(LABEL[p.else[0]])}</span>`) : "");
-  return `<div class="promo"><div><div class="n">${esc(p.name)}</div><div class="m">${esc(LABEL[p.chain])}${p.until ? " · до " + p.until.slice(8) + "." + p.until.slice(5, 7) + "." : ""}</div></div>` +
+  return `<div class="promo"><div><div class="n">${esc(p.name)}</div><div class="m"><b>${esc(LABEL[p.chain])}</b> · ${when(p.since + "/" + p.until)}</div></div>` +
     `<div class="p"><b>${den(p.price)}</b><s>${den(p.regular)}</s><em>−${p.pct}%</em></div><div class="tags">${tags}${p.need ? `<button class="add" data-add="${esc(p.need)}">${onList(p.need) ? "на листа ✓" : "+ на листа"}</button>` : ""}</div></div>`;
 };
 const today = new Date().toISOString().slice(0, 10);
-const PROMOS = D.promos.map(p => ({ chain: CHAINS[p[0]], name: p[1], price: p[2], regular: p[3], pct: p[4], until: p[5], card: !!p[6], need: p[7], best: !!p[8], else: p[9] >= 0 ? [CHAINS[p[9]], p[10]] : null,
+const PROMOS = D.promos.map(p => ({ chain: CHAINS[p[0]], name: p[1], price: p[2], regular: p[3], pct: p[4], since: p[11] || "", until: p[5], card: !!p[6], need: p[7], best: !!p[8], else: p[9] >= 0 ? [CHAINS[p[9]], p[10]] : null,
   group: p[7] && D.needs[p[7]] ? D.needs[p[7]].group : "Друго" })).filter(p => !p.until || p.until >= today);
 function renderPromos() {
   const chip = (attr, value, label, on) => `<button class="chip" aria-pressed="${on}" ${attr}="${esc(value)}">${esc(label)}</button>`;
@@ -530,7 +532,7 @@ function renderPrices() {
     const cells = CHAINS.map(c => { const r = n.offers[c][0]; return `<div class="cell${r && c === minChain[id] ? " min" : ""}">${esc(LABEL[c])}<b>${r ? den(r[2]).replace(" ден.", "") : "–"}</b></div>`; }).join("");
     const r = minChain[id] ? n.offers[minChain[id]][0] : null;
     return `<div class="row"><span class="who">${esc(n.name)}<span class="count">ден. за 1 ${esc(n.unit)}</span></span><span class="acts">${minUnit[id] != null ? `<button class="icon" data-watch="${esc(id)}" aria-pressed="${!!S.watch[id]}" aria-label="Следи ја цената: ${esc(n.name)}">${S.watch[id] ? "★" : "☆"}</button>` : ""}<button class="add" data-add="${esc(id)}">${onList(id) ? "на листа ✓" : "+ на листа"}</button></span>` +
-      `<div class="grid4">${cells}</div><span class="why">${r ? "најевтино: " + esc(lower(r[0])) + (r[4] ? " · на акција" : "") : "нема цена"}</span></div>`;
+      `<div class="grid4">${cells}</div><span class="why">${r ? "најевтино: " + esc(lower(r[0])) + (r[4] ? " · акција во " + esc(LABEL[minChain[id]]) + ", " + when(r[6]) : "") : "нема цена"}</span></div>`;
   }).join("") || `<p class="note" style="margin:0">Нема таква потреба. Пробај со друг збор.</p>`;
   const products = [];
   if (q.length >= 3) for (const [id, n] of Object.entries(D.needs)) for (const c of CHAINS) for (const r of n.offers[c]) if (lower(r[0]).includes(q)) products.push({ c, r, unit: n.unit });
@@ -539,15 +541,16 @@ function renderPrices() {
   $("sameBox").hidden = !same.length;
   $("sameResults").innerHTML = same.slice(0, q ? 30 : 12).map(sameRow).join("");
   $("productBox").hidden = !products.length;
-  $("productResults").innerHTML = products.slice(0, 40).map(({ c, r, unit }) => `<div class="row"><span class="who" style="font-weight:500">${esc(r[0])}</span><span class="price">${den(r[1])}</span><span class="why">${esc(LABEL[c])} · ${den(r[2])} за 1 ${esc(unit)}${r[4] ? " · на акција" : ""}</span></div>`).join("");
+  $("productResults").innerHTML = products.slice(0, 40).map(({ c, r, unit }) => `<div class="row"><span class="who" style="font-weight:500">${esc(r[0])}</span><span class="price">${den(r[1])}</span><span class="why">${esc(LABEL[c])} · ${den(r[2])} за 1 ${esc(unit)}${r[4] ? " · акција " + when(r[6]) : ""}</span></div>`).join("");
 }
 
 // --- приказ: алатки
 const DISH_NEEDS = [...new Set(MAINS.flatMap(d => D.dishes[d].parts.map(p => p[0])))].sort((a, b) => D.needs[a].name.localeCompare(D.needs[b].name, "mk"));
-const SAME = D.same.map(r => { const prices = r.slice(2), known = prices.filter(v => v != null); return { name: r[0], need: r[1], prices, low: Math.min(...known), high: Math.max(...known) }; });
+const SAME = D.same.map(r => { const prices = r.slice(2, 2 + CHAINS.length), known = prices.filter(v => v != null); return { name: r[0], need: r[1], prices, low: Math.min(...known), high: Math.max(...known), deals: r[2 + CHAINS.length] || [] }; });
 function sameRow(g) {
   const cells = CHAINS.map((c, i) => `<div class="cell${g.prices[i] === g.low ? " min" : ""}">${esc(LABEL[c])}<b>${g.prices[i] == null ? "–" : den(g.prices[i]).replace(" ден.", "")}</b></div>`).join("");
   return `<div class="row"><span class="who" style="font-weight:500">${esc(g.name)}</span><span class="price">−${den(g.high - g.low)}</span><div class="grid4">${cells}</div>` +
+    (g.deals.length ? `<span class="why">акција: ${g.deals.map(([c, span]) => esc(LABEL[CHAINS[c]]) + " " + when(span)).join("; ")}</span>` : "") +
     (g.high > 1.8 * g.low ? `<span class="why"><span class="tag warn">голема разлика: провери го пакувањето на полица</span></span>` : "") + `</div>`;
 }
 function renderTools() {
@@ -599,7 +602,7 @@ function renderList(R) {
     const where = CHAINS.filter(c => l.offers[c]).sort((a, b) => l.offers[a].byUnit - l.offers[b].byUnit)[0], n = D.needs[l.id], done = S.done.includes(l.id);
     const own = onList(l.id) ? `<button class="round small" data-own="${esc(l.id)}" data-step="-1" aria-label="Помалку">−</button><button class="round small" data-own="${esc(l.id)}" data-step="1" aria-label="Повеќе">+</button>` : "";
     return `<label class="item${done ? " done" : ""}"><input type="checkbox" data-done="${esc(l.id)}" ${done ? "checked" : ""}><span class="n">${esc(n.name)}</span><span class="q">${amount(l.wanted, n.unit)}${own}</span>` +
-      `<span class="w">${where ? "најевтино: " + esc(LABEL[where]) + " · " + esc(lower(l.offers[where].name)) : "нема цена"}${onList(l.id) ? ` · <button class="mini" data-reg="${esc(l.id)}" aria-pressed="${S.regular[l.id] != null}">секоја недела</button>` : ""}</span></label>`;
+      `<span class="w">${where ? "најевтино: " + esc(LABEL[where]) + " · " + esc(lower(l.offers[where].name)) + (l.offers[where].promo ? " · акција " + l.offers[where].promo : "") : "нема цена"}${onList(l.id) ? ` · <button class="mini" data-reg="${esc(l.id)}" aria-pressed="${S.regular[l.id] != null}">секоја недела</button>` : ""}</span></label>`;
   }).join("") + home.map(([id, q]) => `<div class="item home"><span></span><span class="n">${esc(D.needs[id].name)}</span><span class="q">${amount(q, D.needs[id].unit)}</span><span class="w">има дома од претходно</span></div>`).join("") ||
     `<p class="note" style="margin:0">Додај ставки од „Цени" или состави мени.</p>`;
   $("regular").innerHTML = `<h2 style="margin-bottom:6px">Секоја недела</h2>` + (regular ?
