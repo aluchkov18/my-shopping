@@ -81,6 +81,12 @@ details .chips { margin-top: 12px; }
 .meter i { display: block; height: 100%; background: var(--accent); border-radius: 3px; }
 .note { color: var(--muted); font-size: 13px; margin: 8px 0 0; }
 .alert { background: var(--warn-bg); color: var(--warn); border-radius: 10px; padding: 10px 12px; font-size: 14px; }
+.alert.good { background: var(--good-bg); color: var(--good); border: 0; width: 100%; text-align: left; font: 500 14px/1.4 var(--body); }
+.acts { display: flex; gap: 6px; align-items: center; align-self: start; }
+.x { background: none; border: 0; color: var(--muted); font-size: 20px; line-height: 1; padding: 2px 6px; }
+.calc { display: grid; gap: 10px; }
+.calc .pair { display: grid; grid-template-columns: 1.4em minmax(0, 1fr) minmax(0, 1fr); gap: 8px; align-items: center; font-weight: 600; }
+.calc input, .calc select, .amount { width: 100%; min-width: 0; box-sizing: border-box; font: 400 16px var(--body); color: inherit; background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 9px 10px; }
 
 .row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 12px; padding: 10px 0; border-bottom: 1px solid var(--line); }
 .row:last-child { border-bottom: 0; }
@@ -115,7 +121,7 @@ details .chips { margin-top: 12px; }
 
 nav.tabs { position: fixed; left: 0; right: 0; bottom: 0; z-index: 5; background: var(--surface); border-top: 1px solid var(--line); display: flex; justify-content: center; gap: 4px;
   padding: 6px max(8px, env(safe-area-inset-right, 0px)) calc(6px + env(safe-area-inset-bottom, 0px)) max(8px, env(safe-area-inset-left, 0px)); }
-nav.tabs button { flex: 1; max-width: 130px; background: none; border: 0; padding: 9px 4px; border-radius: 10px; font-size: 13.5px; color: var(--muted); }
+nav.tabs button { flex: 1; max-width: 110px; background: none; border: 0; padding: 9px 2px; border-radius: 10px; font-size: 13.5px; color: var(--muted); }
 nav.tabs button[aria-current=page] { color: var(--accent); background: var(--accent-soft); font-weight: 600; }
 footer { color: var(--muted); font-size: 12.5px; line-height: 1.5; }
 @media (prefers-reduced-motion: reduce) { .switch, .switch::after { transition: none; } }
@@ -125,6 +131,7 @@ footer { color: var(--muted); font-size: 12.5px; line-height: 1.5; }
   <div class="top"><h1>My Shopping</h1><span class="stamp" id="stamp"></span></div>
 
   <div class="view" id="view-menu">
+    <button class="alert good" id="news" data-go="tools" hidden></button>
     <section class="panel controls" aria-label="Поставки">
       <div>
         <div class="field"><label for="budget">Буџет за неделата</label><span class="money"><input id="budget" type="number" inputmode="numeric" min="300" max="6000" step="50"> ден.</span></div>
@@ -169,6 +176,7 @@ footer { color: var(--muted); font-size: 12.5px; line-height: 1.5; }
     </section>
     <section class="panel" id="needResults"></section>
     <section id="productBox" hidden><h2>Производи</h2><div class="panel" id="productResults"></div></section>
+    <section id="sameBox"><h2>Ист производ, различна цена</h2><div class="panel" id="sameResults"></div></section>
   </div>
 
   <div class="view" id="view-list" hidden>
@@ -183,6 +191,34 @@ footer { color: var(--muted); font-size: 12.5px; line-height: 1.5; }
     <section class="panel" id="pantry"></section>
   </div>
 
+  <div class="view" id="view-tools" hidden>
+    <section id="changesBox" hidden><h2 id="changesTitle"></h2><div class="panel" id="changesList"></div></section>
+    <section><h2>Следам цена</h2><div class="panel" id="watchList"></div></section>
+    <section>
+      <h2>Што да зготвам со тоа што имам</h2>
+      <div class="panel">
+        <details id="haveBox"><summary><span>Што имам дома</span><span class="count" id="haveCount"></span></summary><div class="chips" id="haveChips"></div></details>
+        <div id="cookResults" style="margin-top:10px"></div>
+      </div>
+    </section>
+    <section>
+      <h2>Кое пакување се исплати</h2>
+      <div class="panel calc">
+        <div class="pair"><span>А</span><input id="caP" type="number" inputmode="decimal" placeholder="цена, ден." aria-label="Цена на пакување А"><input id="caQ" type="number" inputmode="decimal" placeholder="количина" aria-label="Количина во пакување А"></div>
+        <div class="pair"><span>Б</span><input id="cbP" type="number" inputmode="decimal" placeholder="цена, ден." aria-label="Цена на пакување Б"><input id="cbQ" type="number" inputmode="decimal" placeholder="количина" aria-label="Количина во пакување Б"></div>
+        <select id="calcUnit" aria-label="Мерка на количината"><option value="г">количината е во грами</option><option value="мл">количината е во милилитри</option><option value="парче">количината е во парчиња</option></select>
+        <p class="note" id="calcOut" style="margin:0">Внеси цена и количина за две пакувања.</p>
+      </div>
+    </section>
+    <section>
+      <h2>Колку потрошив</h2>
+      <div class="panel">
+        <div class="field"><input class="amount" id="spentIn" type="number" inputmode="decimal" placeholder="износ од сметката, ден." aria-label="Износ од сметката"><button class="ghost" id="spentAdd" style="flex:none">Запиши</button></div>
+        <div id="spentList" style="margin-top:10px"></div>
+      </div>
+    </section>
+  </div>
+
   <footer>
     Прототип. Цените и акциите се од ценовниците на маркетите; менито и листата ги пресметува апликацијата. Се брои едно главно јадење дневно, а количините во јадењата се прва проценка.
     „На каса" значи цели пакувања, па дел останува дома за следната недела.
@@ -190,7 +226,7 @@ footer { color: var(--muted); font-size: 12.5px; line-height: 1.5; }
 </main>
 
 <nav class="tabs" aria-label="Делови">
-  <button data-tab="menu">Мени</button><button data-tab="promos">Акции</button><button data-tab="prices">Цени</button><button data-tab="list">Листа</button>
+  <button data-tab="menu">Мени</button><button data-tab="promos">Акции</button><button data-tab="prices">Цени</button><button data-tab="list">Листа</button><button data-tab="tools">Алатки</button>
 </nav>
 
 <script type="application/json" id="data">/*DATA*/</script>
@@ -309,7 +345,7 @@ function shop() {
 
 // --- состојба
 const fresh = () => ({ budget: 1100, people: 4, fasting: false, thrifty: false, favs: DEFAULT_FAVS.filter(d => D.dishes[d]), history: [], pantry: {}, week: 1,
-  menu: null, skipped: {}, locked: {}, own: {}, done: [], tab: "menu", open: -1 });
+  menu: null, skipped: {}, locked: {}, own: {}, done: [], tab: "menu", open: -1, watch: {}, have: [], spent: [] });
 let S = fresh();
 try { const saved = JSON.parse(localStorage.getItem("my-shopping-2") || "null"); if (saved && saved.budget) S = { ...fresh(), ...saved, favs: (saved.favs || []).filter(d => D.dishes[d]) }; } catch (e) {}
 const save = () => { try { localStorage.setItem("my-shopping-2", JSON.stringify(S)); } catch (e) {} };
@@ -345,6 +381,9 @@ function renderMenu(R) {
   $("favCount").textContent = S.favs.length + " избрани";
   $("favs").innerHTML = MAINS.map(d => `<button class="chip" aria-pressed="${S.favs.includes(d)}" data-fav="${esc(d)}">${esc(d)}</button>`).join("");
   $("weekTitle").textContent = "Мени за недела " + S.week;
+  const drops = Object.keys(S.watch).filter(id => minUnit[id] != null && minUnit[id] < S.watch[id].p - 0.05);
+  $("news").hidden = !drops.length;
+  if (drops.length) $("news").textContent = `Поевтино од кога следиш: ${drops.slice(0, 3).map(id => lower(D.needs[id].name)).join(", ")}${drops.length > 3 ? " и уште " + (drops.length - 3) : ""}. Допри за детали.`;
   const over = total > S.budget + 0.5;
   $("alert").hidden = !over;
   if (over) $("alert").textContent = `Буџетот не стига за седум јадења. Најевтиното мени за ${S.people} чини ${den(S.cheapest)}`;
@@ -398,14 +437,60 @@ function renderPrices() {
   $("needResults").innerHTML = needs.slice(0, 40).map(([id, n]) => {
     const cells = CHAINS.map(c => { const r = n.offers[c][0]; return `<div class="cell${r && c === minChain[id] ? " min" : ""}">${esc(LABEL[c])}<b>${r ? den(r[2]).replace(" ден.", "") : "–"}</b></div>`; }).join("");
     const r = minChain[id] ? n.offers[minChain[id]][0] : null;
-    return `<div class="row"><span class="who">${esc(n.name)}<span class="count">ден. за 1 ${esc(n.unit)}</span></span><button class="add" data-add="${esc(id)}">${S.own[id] ? "на листа ✓" : "+ на листа"}</button>` +
+    return `<div class="row"><span class="who">${esc(n.name)}<span class="count">ден. за 1 ${esc(n.unit)}</span></span><span class="acts">${minUnit[id] != null ? `<button class="icon" data-watch="${esc(id)}" aria-pressed="${!!S.watch[id]}" aria-label="Следи ја цената: ${esc(n.name)}">${S.watch[id] ? "★" : "☆"}</button>` : ""}<button class="add" data-add="${esc(id)}">${S.own[id] ? "на листа ✓" : "+ на листа"}</button></span>` +
       `<div class="grid4">${cells}</div><span class="why">${r ? "најевтино: " + esc(lower(r[0])) + (r[4] ? " · на акција" : "") : "нема цена"}</span></div>`;
   }).join("") || `<p class="note" style="margin:0">Нема таква потреба. Пробај со друг збор.</p>`;
   const products = [];
   if (q.length >= 3) for (const [id, n] of Object.entries(D.needs)) for (const c of CHAINS) for (const r of n.offers[c]) if (lower(r[0]).includes(q)) products.push({ c, r, unit: n.unit });
   products.sort((a, b) => a.r[1] - b.r[1]);
+  const same = q ? (q.length >= 3 ? SAME.filter(g => lower(g.name).includes(q)) : []) : V.needGroup ? SAME.filter(g => D.needs[g.need] && D.needs[g.need].group === V.needGroup) : SAME;
+  $("sameBox").hidden = !same.length;
+  $("sameResults").innerHTML = same.slice(0, q ? 30 : 12).map(sameRow).join("");
   $("productBox").hidden = !products.length;
   $("productResults").innerHTML = products.slice(0, 40).map(({ c, r, unit }) => `<div class="row"><span class="who" style="font-weight:500">${esc(r[0])}</span><span class="price">${den(r[1])}</span><span class="why">${esc(LABEL[c])} · ${den(r[2])} за 1 ${esc(unit)}${r[4] ? " · на акција" : ""}</span></div>`).join("");
+}
+
+// --- приказ: алатки
+const DISH_NEEDS = [...new Set(MAINS.flatMap(d => D.dishes[d].parts.map(p => p[0])))].sort((a, b) => D.needs[a].name.localeCompare(D.needs[b].name, "mk"));
+const SAME = D.same.map(r => { const prices = r.slice(2), known = prices.filter(v => v != null); return { name: r[0], need: r[1], prices, low: Math.min(...known), high: Math.max(...known) }; });
+function sameRow(g) {
+  const cells = CHAINS.map((c, i) => `<div class="cell${g.prices[i] === g.low ? " min" : ""}">${esc(LABEL[c])}<b>${g.prices[i] == null ? "–" : den(g.prices[i]).replace(" ден.", "")}</b></div>`).join("");
+  return `<div class="row"><span class="who" style="font-weight:500">${esc(g.name)}</span><span class="price">−${den(g.high - g.low)}</span><div class="grid4">${cells}</div>` +
+    (g.high > 1.8 * g.low ? `<span class="why"><span class="tag warn">голема разлика: провери го пакувањето на полица</span></span>` : "") + `</div>`;
+}
+function renderTools() {
+  const scale = S.people / PORTIONS, mine = id => S.watch[id] || S.own[id] ? 0 : 1;
+  const moved = D.changes.map(c => ({ id: c[0], old: c[1], now: c[2], chain: CHAINS[c[3]] })).filter(c => D.needs[c.id]).sort((a, b) => mine(a.id) - mine(b.id) || a.now / a.old - b.now / b.old);
+  $("changesBox").hidden = !moved.length;
+  $("changesTitle").textContent = "Промени на цени од " + D.since;
+  $("changesList").innerHTML = moved.slice(0, 16).map(c => `<div class="row"><span class="who" style="font-weight:500">${esc(D.needs[c.id].name)}</span><span class="price">${den(c.now)}</span>` +
+    `<span class="why"><span class="tag ${c.now < c.old ? "good" : "warn"}">${c.now < c.old ? "поевтино" : "поскапо"} за ${den(Math.abs(c.now - c.old))}</span> беше ${den(c.old)} за 1 ${esc(D.needs[c.id].unit)} · сега најевтино во ${esc(LABEL[c.chain])}</span></div>`).join("");
+  const watched = Object.keys(S.watch).filter(id => D.needs[id] && minUnit[id] != null);
+  $("watchList").innerHTML = watched.map(id => {
+    const w = S.watch[id], now = minUnit[id], diff = now - w.p;
+    const tag = Math.abs(diff) < 0.05 ? `<span class="tag">без промена од ${esc(w.d)}</span>` : `<span class="tag ${diff < 0 ? "good" : "warn"}">${diff < 0 ? "поевтино" : "поскапо"} за ${den(Math.abs(diff))} од ${esc(w.d)}</span>`;
+    return `<div class="row"><span class="who">${esc(D.needs[id].name)}</span><span class="acts"><span class="price">${den(now)}</span><button class="x" data-watch="${esc(id)}" aria-label="Не следи: ${esc(D.needs[id].name)}">×</button></span>` +
+      `<span class="why">${tag} за 1 ${esc(D.needs[id].unit)} · ${esc(LABEL[minChain[id]])} · ${esc(lower(D.needs[id].offers[minChain[id]][0][0]))}</span></div>`;
+  }).join("") || `<p class="note" style="margin:0">Во „Цени" допри ☆ кај она што го купуваш често. Тука ќе гледаш дали поевтинило или поскапело од денот кога почна да го следиш.</p>`;
+  const have = new Set(S.have);
+  $("haveCount").textContent = have.size ? have.size + " избрани" : "одбери";
+  $("haveChips").innerHTML = DISH_NEEDS.map(id => `<button class="chip" aria-pressed="${have.has(id)}" data-have="${esc(id)}">${esc(lower(D.needs[id].name))}</button>`).join("");
+  const ranked = MAINS.map(d => { const miss = D.dishes[d].parts.filter(p => !have.has(p[0])); return { d, miss, n: D.dishes[d].parts.length, cost: miss.reduce((t, [id, q]) => t + q * scale * minUnit[id], 0) }; })
+    .filter(x => x.miss.length < x.n).sort((a, b) => a.miss.length - b.miss.length || a.cost - b.cost);
+  $("cookResults").innerHTML = !have.size ? `<p class="note" style="margin:0">Означи што имаш дома и ќе ги видиш јадењата за кои ти фали најмалку.</p>` :
+    ranked.slice(0, 8).map(x => `<div class="row"><span class="who" style="font-weight:500">${esc(x.d)}</span>${x.miss.length ? `<button class="add" data-cook="${esc(x.d)}">+ на листа</button>` : `<span class="tag good" style="align-self:start">имаш сè</span>`}` +
+      `<span class="why">${x.miss.length ? "фали: " + esc(lower(x.miss.map(p => D.needs[p[0]].name).join(", "))) + " · околу " + den(x.cost) : "сите состојки се дома"}</span></div>`).join("") ||
+    `<p class="note" style="margin:0">Со ова уште не излегува ниту едно јадење.</p>`;
+  const month = new Date().toISOString().slice(0, 7), inMonth = S.spent.filter(e => e[0].slice(0, 7) === month);
+  $("spentList").innerHTML = (S.spent.length ? `<p style="margin:0 0 6px;font-size:14px">Овој месец: <b>${den(inMonth.reduce((t, e) => t + e[1], 0))}</b> во ${inMonth.length} ${inMonth.length === 1 ? "пазарење" : "пазарења"}.</p>` :
+    `<p class="note" style="margin:0">Запиши го износот по секое пазарење и ќе гледаш колку оди месечно.</p>`) +
+    S.spent.slice(-6).reverse().map(e => `<div class="item" style="grid-template-columns:minmax(0,1fr) auto auto"><span>${e[0].slice(8)}.${e[0].slice(5, 7)}.</span><span class="q">${den(e[1])}</span><button class="x" data-spent="${e[2]}" aria-label="Избриши го записот">×</button></div>`).join("");
+}
+function calc() {
+  const v = id => +$(id).value, unit = $("calcUnit").value, per = unit === "парче" ? 1 : 1000, label = unit === "г" ? "1 кг" : unit === "мл" ? "1 л" : "1 парче", ok = x => isFinite(x) && x > 0;
+  const a = v("caP") / v("caQ") * per, b = v("cbP") / v("cbQ") * per, fine = x => x < 10 ? num(x) + " ден." : den(x);
+  $("calcOut").textContent = ok(a) && ok(b) ? `А: ${fine(a)} за ${label}. Б: ${fine(b)} за ${label}. ` + (Math.abs(a - b) < 0.005 ? "Исто чинат." : `${a < b ? "А" : "Б"} е поевтино за ${Math.round(100 * (1 - Math.min(a, b) / Math.max(a, b)))}%.`) :
+    ok(a) ? `А: ${fine(a)} за ${label}. Внеси го и второто пакување.` : "Внеси цена и количина за две пакувања.";
 }
 
 // --- приказ: листа
@@ -438,10 +523,10 @@ function listText(R) {
 
 function render() {
   $("stamp").textContent = D.city + " · цени од " + D.day;
-  for (const t of ["menu", "promos", "prices", "list"]) $("view-" + t).hidden = S.tab !== t;
+  for (const t of ["menu", "promos", "prices", "list", "tools"]) $("view-" + t).hidden = S.tab !== t;
   document.querySelectorAll("nav.tabs button").forEach(b => b.dataset.tab === S.tab ? b.setAttribute("aria-current", "page") : b.removeAttribute("aria-current"));
   const R = shop(); S.after = R.home; window.R = R;
-  if (S.tab === "menu") renderMenu(R); else if (S.tab === "promos") renderPromos(); else if (S.tab === "prices") renderPrices(); else renderList(R);
+  if (S.tab === "menu") renderMenu(R); else if (S.tab === "promos") renderPromos(); else if (S.tab === "prices") renderPrices(); else if (S.tab === "tools") renderTools(); else renderList(R);
   save();
 }
 function replan() { plan(); render(); }
@@ -468,7 +553,7 @@ $("menu").addEventListener("change", e => {
   S.menu[i] = d; S.locked[i] = d; S.open = -1; render();
 });
 $("next").addEventListener("click", () => { for (const id of S.done) delete S.own[id]; S.history = [...S.history, S.menu].slice(-4); S.pantry = S.after || {}; S.week++; S.locked = {}; S.done = []; replan(); window.scrollTo({ top: 0, behavior: "smooth" }); });
-$("reset").addEventListener("click", () => { const tab = S.tab; S = fresh(); S.tab = tab; replan(); });
+$("reset").addEventListener("click", () => { S = { ...fresh(), tab: S.tab, watch: S.watch, spent: S.spent }; replan(); });
 document.addEventListener("click", e => {
   const t = e.target.closest("[data-tab],[data-go]"); if (t) { S.tab = t.dataset.tab || t.dataset.go; render(); window.scrollTo({ top: 0 }); return; }
   const b = e.target.closest("button"); if (!b) return;
@@ -478,10 +563,16 @@ document.addEventListener("click", e => {
   else if (b.dataset.add) { const id = b.dataset.add; if (S.own[id]) delete S.own[id]; else S.own[id] = 1; render(); }
   else if (b.dataset.own) { e.preventDefault(); const id = b.dataset.own, q = Math.round(((S.own[id] || 0) + +b.dataset.step) * 100) / 100; if (q <= 0) delete S.own[id]; else S.own[id] = q; render(); }
   else if (b.id === "emptyPantry") { S.pantry = {}; render(); }
+  else if (b.dataset.watch) { const id = b.dataset.watch; if (S.watch[id]) delete S.watch[id]; else S.watch[id] = { p: minUnit[id], d: D.day.slice(0, 6) }; render(); }
+  else if (b.dataset.have) { const id = b.dataset.have; S.have = S.have.includes(id) ? S.have.filter(x => x !== id) : [...S.have, id]; render(); }
+  else if (b.dataset.cook) { const scale = S.people / PORTIONS; for (const [id, q] of D.dishes[b.dataset.cook].parts) if (!S.have.includes(id)) S.own[id] = Math.round(((S.own[id] || 0) + q * scale) * 100) / 100; b.textContent = "на листа ✓"; b.disabled = true; save(); }
+  else if (b.dataset.spent) { S.spent = S.spent.filter(e => String(e[2]) !== b.dataset.spent); render(); }
+  else if (b.id === "spentAdd") { const v = +$("spentIn").value; if (v > 0) { S.spent = [...S.spent, [new Date().toISOString().slice(0, 10), Math.round(v), Date.now()]].slice(-60); $("spentIn").value = ""; render(); } }
 });
 $("morePromos").addEventListener("click", () => { V.shown += 60; render(); });
 $("onlyBest").addEventListener("change", e => { V.best = e.target.checked; V.shown = 40; render(); });
 $("noCard").addEventListener("change", e => { V.noCard = e.target.checked; V.shown = 40; render(); });
+for (const id of ["caP", "caQ", "cbP", "cbQ", "calcUnit"]) $(id).addEventListener("input", calc);
 $("q").addEventListener("input", e => { V.q = e.target.value; V.needGroup = ""; renderPrices(); });
 $("items").addEventListener("change", e => { const id = e.target.dataset.done; if (!id) return; S.done = e.target.checked ? [...S.done, id] : S.done.filter(x => x !== id); render(); });
 $("clearDone").addEventListener("click", () => { S.done = []; render(); });

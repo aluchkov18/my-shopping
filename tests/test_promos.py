@@ -30,3 +30,13 @@ def test_cheapest_means_lowest_unit_price_in_the_city():
     data = {"oriz": {"zito": [hit("zito", "ОРИЗ Ж 1кг", 75, 75)], "stokomak": [], "kam": [hit("kam", "ОРИЗ К 1кг", 70, 70)], "ramstore": [a]}}
     out = judge({"ramstore": {("ОРИЗ 1кг", ""): row(60, 80, "ЛОЈАЛНОСТ")}}, data, [])
     assert out[0]["cheapest"] and out[0]["card"] and out[0]["elsewhere"] is None
+
+
+def test_history_reports_only_real_moves_of_the_city_minimum():
+    from catalog.history import changes
+    row = lambda unit, name="X", promo=False: {"unit_price": unit, "price": unit, "promo": promo, "name": name}
+    old = {"mleko-trajno": {"zito": row(48), "kam": row(52)}, "oriz": {"zito": row(70)}, "seker": {"zito": row(60)}, "sol": {"zito": row(20)}}
+    new = {"mleko-trajno": {"zito": row(48), "kam": row(44, "МЛЕКО К", True)}, "oriz": {"zito": row(70.5)}, "seker": {"zito": row(66)}, "jajca": {"zito": row(9)}}
+    out = changes(old, new)
+    assert [c["need"] for c in out] == ["mleko-trajno", "seker"]                 # оризот е заокружување, јајцата немаат вчера
+    assert out[0]["chain"] == "kam" and out[0]["pct"] == -8 and out[0]["promo"] and out[1]["pct"] == 10
