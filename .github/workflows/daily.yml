@@ -4,6 +4,8 @@ on:
   schedule:
     # 09:40 UTC = 10:40 во Скопје зиме, 11:40 лете. Трговците ажурираат до 10:00.
     - cron: "40 9 * * *"
+    # Резерва: GitHub понекогаш ја прескокнува закажаната задача (12.11.2026 не тргна). Ако денешното читање постои, оваа не чита.
+    - cron: "25 11 * * *"
   workflow_dispatch:
     inputs:
       chains:
@@ -24,17 +26,26 @@ jobs:
     timeout-minutes: 90
     steps:
       - uses: actions/checkout@v4
+      - name: Дали денешното читање веќе постои
+        id: today
+        run: |
+          if [ "${{ github.event_name }}" = "schedule" ] && [ -f "data/runs/$(TZ=Europe/Skopje date +%F).json" ]; then
+            echo "done=true" >> "$GITHUB_OUTPUT"
+          fi
       - uses: actions/setup-python@v5
+        if: steps.today.outputs.done != 'true'
         with:
           python-version: "3.12"
           cache: pip
       - run: pip install -r requirements.txt
+        if: steps.today.outputs.done != 'true'
       - name: Читање на ценовниците
+        if: steps.today.outputs.done != 'true'
         env:
           CHAINS: ${{ github.event.inputs.chains }}
         run: python -m collector.run $CHAINS
       - name: Запис во репото
-        if: always()
+        if: always() && steps.today.outputs.done != 'true'
         run: |
           git config user.name "my-shopping-bot"
           git config user.email "my-shopping-bot@users.noreply.github.com"
@@ -43,6 +54,7 @@ jobs:
           git pull --rebase
           git push
       - name: Дневна слика и порака на телефон
+        if: steps.today.outputs.done != 'true'
         continue-on-error: true
         env:
           NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
