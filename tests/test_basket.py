@@ -36,3 +36,14 @@ def test_recipes_use_known_needs():
     known = {n.id for n in NEEDS}
     assert all(need in known and qty > 0 for parts in RECIPES.values() for need, qty in parts)
     assert len(RECIPES) >= 20
+
+
+def test_menu_order_and_shopping_list():
+    from planner.menu import order, shopping
+    from planner.recipes import KIND
+    menu = order(["Мусака", "Сарма", "Леќа чорба", "Тавче гравче"])
+    assert sorted(menu) == sorted(["Мусака", "Сарма", "Леќа чорба", "Тавче гравче"])
+    assert all(KIND[a] != KIND[b] for a, b in zip(menu, menu[1:]))
+    basket = dict(shopping(["Тавче гравче", "Леќа чорба"], 1.5))
+    assert basket["grav"] == 0.75 and basket["kromid"] == 0.68 and basket["lekja"] == 0.6
+    assert set(KIND) >= {"Мусака", "Шопска салата"}
