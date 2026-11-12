@@ -2,7 +2,7 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700&family=Onest:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap">
 <style>
-/* Layout: one phone-width column; the week reads like a till receipt, day rows with dotted leaders to the price. */
+/* Layout: one phone-width column with four views behind a bottom bar; the week reads like a till receipt. */
 :root {
   --bg: #f4f3f7; --surface: #ffffff; --ink: #1e1a26; --muted: #6a6477; --line: #e2dfe9;
   --accent: #5b2a86; --accent-ink: #ffffff; --accent-soft: #efe7f7;
@@ -21,8 +21,10 @@
   --good: #72d3a2; --good-bg: #173326; --warn: #f0b866; --warn-bg: #3a2a10; color-scheme: dark }
 
 body { background: var(--bg); color: var(--ink); font: 400 15px/1.45 var(--body);
-  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 20px 40px; }
-main { max-width: 540px; margin: 0 auto; display: flex; flex-direction: column; gap: 22px; }
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 20px 96px; }
+[hidden] { display: none !important; }
+main { max-width: 540px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
+.view { display: flex; flex-direction: column; gap: 20px; }
 h1 { font: 700 22px/1.1 var(--display); margin: 0; letter-spacing: -0.01em; }
 h2 { font: 500 12px/1.2 var(--display); margin: 0 0 10px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
 .top { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
@@ -37,32 +39,42 @@ input[type=range] { width: 100%; accent-color: var(--accent); }
 .stepper { display: flex; align-items: center; gap: 10px; font: 600 16px var(--mono); }
 button { font: 500 15px var(--body); color: inherit; cursor: pointer; }
 button:focus-visible, input:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-.round { width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--line); background: var(--bg); line-height: 1; font-size: 18px; }
-.switch { appearance: none; width: 46px; height: 26px; border-radius: 13px; background: var(--line); position: relative; cursor: pointer; transition: background .15s; margin: 0; }
+.round { width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--line); background: var(--bg); line-height: 1; font-size: 18px; flex: none; }
+.round.small { width: 28px; height: 28px; font-size: 15px; }
+.switch { appearance: none; width: 46px; height: 26px; border-radius: 13px; background: var(--line); position: relative; cursor: pointer; transition: background .15s; margin: 0; flex: none; }
 .switch::after { content: ""; position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%; background: var(--surface); transition: transform .15s; }
 .switch:checked { background: var(--accent); }
 .switch:checked::after { transform: translateX(20px); }
 details > summary { cursor: pointer; font-weight: 500; list-style: none; display: flex; justify-content: space-between; gap: 12px; }
 details > summary::-webkit-details-marker { display: none; }
-details > summary .count { color: var(--muted); font-weight: 400; }
-.chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
-.chip { border: 1px solid var(--line); background: var(--bg); border-radius: 999px; padding: 5px 11px; font-size: 13px; }
+.count { color: var(--muted); font-weight: 400; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+details .chips { margin-top: 12px; }
+.chips.slide { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; }
+.chips.slide::-webkit-scrollbar { display: none; }
+.chips.slide .chip { flex: none; }
+.chip { border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 5px 11px; font-size: 13px; }
 .chip[aria-pressed=true] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
 .primary { background: var(--accent); color: var(--accent-ink); border: 0; border-radius: 10px; padding: 12px 16px; font-weight: 600; width: 100%; }
 .ghost { background: none; border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px; }
 .actions { display: flex; gap: 10px; flex-wrap: wrap; }
-.actions > * { flex: 1 1 160px; }
+.actions > * { flex: 1 1 150px; }
 
 .receipt { padding: 4px 16px 14px; }
-.day { display: grid; grid-template-columns: 2.6em minmax(0, 1fr) auto 30px; align-items: center; gap: 8px; padding: 11px 0; border-bottom: 1px dashed var(--line); }
+.day { display: grid; grid-template-columns: 2.4em minmax(0, 1fr) auto 30px 30px; align-items: center; gap: 6px; padding: 11px 0; border-bottom: 1px dashed var(--line); }
 .day .d { font: 600 12px var(--mono); color: var(--muted); text-transform: uppercase; }
-.day .dish { min-width: 0; }
-.day .dish b { font-weight: 500; display: block; overflow-wrap: anywhere; }
+.dishbtn { background: none; border: 0; padding: 0; text-align: left; min-width: 0; }
+.dishbtn b { font-weight: 500; display: block; overflow-wrap: anywhere; }
 .tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 3px; }
-.tag { font-size: 11px; padding: 1px 7px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); }
-.tag.lean { background: var(--good-bg); color: var(--good); }
+.tag { font-size: 11px; padding: 1px 7px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); white-space: nowrap; }
+.tag.good { background: var(--good-bg); color: var(--good); }
+.tag.warn { background: var(--warn-bg); color: var(--warn); }
 .price { font: 600 14px var(--mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
-.swap { width: 30px; height: 30px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); font-size: 15px; line-height: 1; }
+.icon { width: 30px; height: 30px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); font-size: 15px; line-height: 1; padding: 0; display: grid; place-items: center; color: var(--muted); }
+.pick { width: 100%; box-sizing: border-box; margin-top: 8px; font: 400 14px var(--body); color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 8px; }
+.icon[aria-pressed=true] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+.parts { grid-column: 2 / -1; font-size: 13px; color: var(--muted); display: grid; gap: 2px; padding-bottom: 2px; }
+.parts span { display: flex; justify-content: space-between; gap: 10px; }
 .total { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding-top: 12px; }
 .total .big { font: 700 20px var(--display); font-variant-numeric: tabular-nums; }
 .meter { height: 6px; border-radius: 3px; background: var(--line); margin-top: 8px; overflow: hidden; }
@@ -70,80 +82,116 @@ details > summary .count { color: var(--muted); font-weight: 400; }
 .note { color: var(--muted); font-size: 13px; margin: 8px 0 0; }
 .alert { background: var(--warn-bg); color: var(--warn); border-radius: 10px; padding: 10px 12px; font-size: 14px; }
 
-.store { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 12px; padding: 10px 0; border-bottom: 1px solid var(--line); }
-.store:last-of-type { border-bottom: 0; }
-.store .who { font-weight: 600; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-.store.partial .price { color: var(--muted); font-weight: 400; }
-.store .why { grid-column: 1 / -1; color: var(--muted); font-size: 13px; overflow-wrap: anywhere; }
-.pill { font: 500 11px var(--body); padding: 2px 8px; border-radius: 999px; background: var(--good-bg); color: var(--good); }
-.items { display: grid; gap: 0; margin-top: 12px; }
-.item { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 12px; padding: 8px 0; border-bottom: 1px solid var(--line); font-size: 14px; }
-.item .q { font: 400 13px var(--mono); white-space: nowrap; }
-.item .w { grid-column: 1 / -1; color: var(--muted); font-size: 12px; }
+.row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 12px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+.row:last-child { border-bottom: 0; }
+.row .who { font-weight: 600; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; min-width: 0; overflow-wrap: anywhere; }
+.row .why { grid-column: 1 / -1; color: var(--muted); font-size: 13px; overflow-wrap: anywhere; }
+.row.partial .price { color: var(--muted); font-weight: 400; }
+.item { display: grid; grid-template-columns: 26px minmax(0, 1fr) auto; gap: 2px 10px; padding: 9px 0; border-bottom: 1px solid var(--line); font-size: 14px; align-items: center; }
+.item:last-child { border-bottom: 0; }
+.item input[type=checkbox] { width: 20px; height: 20px; accent-color: var(--accent); margin: 0; }
+.item .q { font: 400 13px var(--mono); white-space: nowrap; display: flex; align-items: center; gap: 6px; }
+.item .w { grid-column: 2 / -1; color: var(--muted); font-size: 12px; overflow-wrap: anywhere; }
+.item.done span.n { text-decoration: line-through; color: var(--muted); }
 .item.home { color: var(--muted); }
+
+.promo { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 12px; padding: 12px 0; border-bottom: 1px solid var(--line); }
+.promo:last-child { border-bottom: 0; }
+.promo .n { font-weight: 500; overflow-wrap: anywhere; }
+.promo .m { color: var(--muted); font-size: 12.5px; }
+.promo .p { text-align: right; }
+.promo .p b { font: 600 16px var(--mono); display: block; white-space: nowrap; }
+.promo .p s { color: var(--muted); font: 400 12px var(--mono); }
+.promo .p em { font: 600 12px var(--mono); font-style: normal; color: var(--good); margin-left: 6px; }
+.promo .tags { grid-column: 1 / -1; margin-top: 0; align-items: center; }
+.promo .tags .add { margin-left: auto; }
+.search { width: 100%; box-sizing: border-box; font: 400 16px var(--body); color: inherit; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; }
+.grid4 { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; margin-top: 4px; }
+.cell { background: var(--bg); border-radius: 8px; padding: 6px 4px; text-align: center; font-size: 11px; color: var(--muted); }
+.cell b { display: block; font: 600 13px var(--mono); color: var(--ink); }
+.cell.min { background: var(--good-bg); color: var(--good); }
+.cell.min b { color: var(--good); }
+.add { align-self: start; border: 1px solid var(--accent); color: var(--accent); background: none; border-radius: 8px; padding: 4px 10px; font-size: 13px; white-space: nowrap; }
+
+nav.tabs { position: fixed; left: 0; right: 0; bottom: 0; z-index: 5; background: var(--surface); border-top: 1px solid var(--line); display: flex; justify-content: center; gap: 4px;
+  padding: 6px max(8px, env(safe-area-inset-right, 0px)) calc(6px + env(safe-area-inset-bottom, 0px)) max(8px, env(safe-area-inset-left, 0px)); }
+nav.tabs button { flex: 1; max-width: 130px; background: none; border: 0; padding: 9px 4px; border-radius: 10px; font-size: 13.5px; color: var(--muted); }
+nav.tabs button[aria-current=page] { color: var(--accent); background: var(--accent-soft); font-weight: 600; }
 footer { color: var(--muted); font-size: 12.5px; line-height: 1.5; }
 @media (prefers-reduced-motion: reduce) { .switch, .switch::after { transition: none; } }
 </style>
 
 <main>
-  <div class="top">
-    <h1>My Shopping</h1>
-    <span class="stamp" id="stamp"></span>
+  <div class="top"><h1>My Shopping</h1><span class="stamp" id="stamp"></span></div>
+
+  <div class="view" id="view-menu">
+    <section class="panel controls" aria-label="Поставки">
+      <div>
+        <div class="field"><label for="budget">Буџет за неделата</label><span class="money"><input id="budget" type="number" inputmode="numeric" min="300" max="6000" step="50"> ден.</span></div>
+        <input id="budgetRange" type="range" min="400" max="4000" step="50" aria-label="Буџет">
+      </div>
+      <div class="field"><span class="name">Членови</span><span class="stepper"><button class="round" id="less" aria-label="Помалку членови">−</button><span id="people"></span><button class="round" id="more" aria-label="Повеќе членови">+</button></span></div>
+      <div class="field"><label for="fasting">Посно во среда и петок</label><input class="switch" id="fasting" type="checkbox"></div>
+      <div class="field"><label for="thrifty">Штедливо мени</label><input class="switch" id="thrifty" type="checkbox"></div>
+      <details id="favBox"><summary><span>Омилени јадења</span><span class="count" id="favCount"></span></summary><div class="chips" id="favs"></div></details>
+    </section>
+    <section>
+      <h2 id="weekTitle">Мени за неделата</h2>
+      <div id="alert" class="alert" hidden></div>
+      <div class="panel receipt" id="menu"></div>
+      <p class="note" id="menuHint">Допри јадење за состојките и за да избереш друго. ↻ дава ново јадење, а катанецот го задржува за тој ден.</p>
+    </section>
+    <section class="panel" id="menuStore"></section>
+    <section><h2>Акции што вредат</h2><div class="panel" id="teaser"></div></section>
+    <div class="actions"><button class="primary" id="next">Следна недела</button><button class="ghost" id="reset">Почни одново</button></div>
   </div>
 
-  <section class="panel controls" aria-label="Поставки">
-    <div>
-      <div class="field">
-        <label for="budget">Буџет за неделата</label>
-        <span class="money"><input id="budget" type="number" inputmode="numeric" min="300" max="6000" step="50"> ден.</span>
+  <div class="view" id="view-promos" hidden>
+    <section>
+      <h2>Акции во сите маркети</h2>
+      <p class="note" id="promoStats" style="margin:0 0 12px"></p>
+      <div class="chips" id="promoChains"></div>
+      <div class="chips slide" id="promoGroups" style="margin-top:8px"></div>
+      <div class="panel controls" style="margin-top:12px">
+        <div class="field"><label for="onlyBest">Само најевтини во градот</label><input class="switch" id="onlyBest" type="checkbox"></div>
+        <div class="field"><label for="noCard">Без картичка</label><input class="switch" id="noCard" type="checkbox"></div>
       </div>
-      <input id="budgetRange" type="range" min="400" max="4000" step="50" aria-label="Буџет">
-    </div>
-    <div class="field">
-      <span class="name">Членови</span>
-      <span class="stepper"><button class="round" id="less" aria-label="Помалку членови">−</button><span id="people"></span><button class="round" id="more" aria-label="Повеќе членови">+</button></span>
-    </div>
-    <div class="field">
-      <label for="fasting">Посно во среда и петок</label>
-      <input class="switch" id="fasting" type="checkbox">
-    </div>
-    <details id="favBox">
-      <summary><span>Омилени јадења</span><span class="count" id="favCount"></span></summary>
-      <div class="chips" id="favs"></div>
-    </details>
-  </section>
+    </section>
+    <section class="panel" id="promoList"></section>
+    <button class="ghost" id="morePromos">Прикажи уште</button>
+  </div>
 
-  <section>
-    <h2 id="weekTitle">Мени за неделата</h2>
-    <div id="alert" class="alert" hidden></div>
-    <div class="panel receipt" id="menu"></div>
-  </section>
+  <div class="view" id="view-prices" hidden>
+    <section>
+      <h2>Каде е најевтино</h2>
+      <input class="search" id="q" type="search" placeholder="млеко, масло, брилијант, пелени…" autocomplete="off">
+      <div class="chips slide" id="groupChips" style="margin-top:10px"></div>
+    </section>
+    <section class="panel" id="needResults"></section>
+    <section id="productBox" hidden><h2>Производи</h2><div class="panel" id="productResults"></div></section>
+  </div>
 
-  <section>
-    <h2>Каде да купам</h2>
-    <div class="panel" id="stores"></div>
-  </section>
-
-  <section>
-    <h2>Листа за пазарење</h2>
-    <div class="panel">
-      <details id="listBox">
-        <summary><span id="listTitle"></span><span class="count">прикажи</span></summary>
-        <div class="items" id="items"></div>
-      </details>
-    </div>
-  </section>
-
-  <div class="actions">
-    <button class="primary" id="next">Следна недела</button>
-    <button class="ghost" id="reset">Почни одново</button>
+  <div class="view" id="view-list" hidden>
+    <section><h2>Каде да купам</h2><div class="panel" id="stores"></div></section>
+    <section>
+      <h2 id="listTitle">Листа за пазарење</h2>
+      <div class="panel" id="items"></div>
+      <div class="actions" style="margin-top:12px"><button class="primary" id="copy">Копирај ја листата</button><button class="ghost" id="clearDone">Одштиклирај сè</button></div>
+      <p class="note" id="copied" hidden>Листата е копирана. Залепи ја во порака.</p>
+      <textarea id="copyText" hidden rows="8" style="width:100%;box-sizing:border-box;margin-top:10px;font:13px var(--mono);background:var(--surface);color:inherit;border:1px solid var(--line);border-radius:10px;padding:10px"></textarea>
+    </section>
+    <section class="panel" id="pantry"></section>
   </div>
 
   <footer>
-    Прототип. Цените се од ценовниците на маркетите, а менито и листата ги пресметува апликацијата. Се брои едно главно јадење дневно.
-    Количините во јадењата се прва проценка. „На каса" значи цели пакувања, па дел останува дома за следната недела.
+    Прототип. Цените и акциите се од ценовниците на маркетите; менито и листата ги пресметува апликацијата. Се брои едно главно јадење дневно, а количините во јадењата се прва проценка.
+    „На каса" значи цели пакувања, па дел останува дома за следната недела.
   </footer>
 </main>
+
+<nav class="tabs" aria-label="Делови">
+  <button data-tab="menu">Мени</button><button data-tab="promos">Акции</button><button data-tab="prices">Цени</button><button data-tab="list">Листа</button>
+</nav>
 
 <script type="application/json" id="data">/*DATA*/</script>
 <script>
@@ -153,19 +201,23 @@ const DAYS = ["пон", "вто", "сре", "чет", "пет", "саб", "не�
 const DEFAULT_FAVS = ["Грав со колбас", "Ориз со пилешки копан", "Сарма", "Манџа грашок со пилешко", "Леќа чорба", "Пире со ќофтиња"];
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
-const den = n => Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".") + " ден.";
+const den = n => (Math.round(n * 10) / 10 >= 100 ? Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".") : String(Math.round(n * 10) / 10).replace(".", ",")) + " ден.";
+const num = n => String(Math.round(n * 100) / 100).replace(".", ",");
 function amount(q, unit) {
-  const f = n => String(Math.round(n * 100) / 100).replace(".", ",");
-  if (unit === "кг") return q < 1 ? Math.round(q * 1000) + " г" : f(q) + " кг";
-  if (unit === "л") return q < 1 ? Math.round(q * 1000) + " мл" : f(q) + " л";
-  return f(Math.ceil(q - 1e-9)) + " парч.";
+  if (unit === "кг") return q < 1 ? Math.round(q * 1000) + " г" : num(q) + " кг";
+  if (unit === "л") return q < 1 ? Math.round(q * 1000) + " мл" : num(q) + " л";
+  if (unit === "м") return num(q) + " м";
+  return num(Math.ceil(q - 1e-9)) + " парч.";
 }
+const lower = s => s.toLowerCase();
+const LOCK = '<svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><rect x="3" y="7" width="10" height="7" rx="1.5" fill="currentColor"/><path d="M5 7V5a3 3 0 0 1 6 0v2" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>';
 
 // --- цени
-const minUnit = {};
+const minUnit = {}, minChain = {}, needPromo = {};
 for (const [id, need] of Object.entries(D.needs)) {
-  const firsts = CHAINS.map(c => need.offers[c][0]).filter(Boolean).map(r => r[2]);
-  minUnit[id] = firsts.length ? Math.min(...firsts) : null;
+  let best = null;
+  for (const c of CHAINS) { const r = need.offers[c][0]; if (r && (!best || r[2] < best.r[2])) best = { r, c }; }
+  minUnit[id] = best ? best.r[2] : null; minChain[id] = best ? best.c : null; needPromo[id] = best ? !!best.r[4] : false;
 }
 function offer(id, chain, wanted) {
   let best = null, lowest = Infinity;
@@ -183,26 +235,28 @@ const dishCost = (d, scale) => D.dishes[d].parts.reduce((s, [id, q]) => s + q * 
 
 // --- избор на мени
 function choose(o) {
-  const scale = o.people / PORTIONS, favs = new Set(o.favs), avoid = new Set(o.avoid);
-  const pool = MAINS.filter(d => !avoid.has(d)), cost = Object.fromEntries(pool.map(d => [d, dishCost(d, scale)]));
-  const lean = o.fasting ? LEAN_DAYS.length : 0;
-  const valid = m => { const k = {}; let l = 0; for (const d of m) { k[D.dishes[d].kind] = (k[D.dishes[d].kind] || 0) + 1; if (k[D.dishes[d].kind] > 2) return false; if (D.dishes[d].posno) l++; } return l >= lean; };
-  const score = m => { let t = 0, f = 0; const k = new Set(); for (const d of m) { t += cost[d]; if (favs.has(d)) f++; k.add(D.dishes[d].kind); } return t > o.budget ? [0, 0, 0, -t] : [1, Math.min(MAX_FAV, f), k.size, t]; };
+  const scale = o.people / PORTIONS, favs = new Set(o.favs), avoid = new Set(o.avoid), fixed = Object.values(o.locked);
+  const pool = MAINS.filter(d => !avoid.has(d) || fixed.includes(d)), cost = Object.fromEntries(pool.map(d => [d, dishCost(d, scale)]));
+  const lean = o.fasting ? LEAN_DAYS.length : 0, free = 7 - fixed.length;
+  const valid = m => { const k = {}; let l = 0; for (const d of m) { const kind = D.dishes[d].kind; k[kind] = (k[kind] || 0) + 1; if (k[kind] > 2 && !fixed.includes(d)) return false; if (D.dishes[d].posno) l++; } return l >= lean; };
+  const score = m => { let t = 0, f = 0; const k = new Set(); for (const d of m) { t += cost[d]; if (favs.has(d)) f++; k.add(D.dishes[d].kind); } return t > o.budget ? [0, 0, 0, -t] : [1, Math.min(MAX_FAV, f), k.size, o.thrifty ? -t : t]; };
   const better = (a, b) => { for (let i = 0; i < 4; i++) if (a[i] !== b[i]) return a[i] > b[i]; return false; };
-  const byPrice = [...pool].sort((a, b) => cost[a] - cost[b]), cheapest = [], kinds = {};
-  for (const d of [...byPrice.filter(x => D.dishes[x].posno).slice(0, lean), ...byPrice]) {
+  const byPrice = pool.filter(d => !fixed.includes(d)).sort((a, b) => cost[a] - cost[b]), cheapest = [...fixed], kinds = {};
+  for (const d of fixed) kinds[D.dishes[d].kind] = (kinds[D.dishes[d].kind] || 0) + 1;
+  const haveLean = fixed.filter(d => D.dishes[d].posno).length;
+  for (const d of [...byPrice.filter(x => D.dishes[x].posno).slice(0, Math.max(0, lean - haveLean)), ...byPrice]) {
     const k = D.dishes[d].kind;
     if (cheapest.length < 7 && !cheapest.includes(d) && (kinds[k] || 0) < 2) { cheapest.push(d); kinds[k] = (kinds[k] || 0) + 1; }
   }
   let seed = 7; const rnd = () => (seed = (seed * 1664525 + 1013904223) >>> 0) / 4294967296;
   let best = [...cheapest];
   for (let start = 0; start < 10; start++) {
-    let menu = start === 0 ? [...cheapest] : [...pool].sort(() => rnd() - 0.5).slice(0, 7);
-    if (!valid(menu)) continue;
+    let menu = start === 0 ? [...cheapest] : [...fixed, ...byPrice.slice().sort(() => rnd() - 0.5).slice(0, free)];
+    if (menu.length < 7 || !valid(menu)) continue;
     let improved = true;
     while (improved) {
       improved = false;
-      for (let i = 0; i < 7; i++) for (const d of pool) {
+      for (let i = fixed.length; i < 7; i++) for (const d of byPrice) {
         if (menu.includes(d)) continue;
         const trial = menu.slice(); trial[i] = d;
         if (valid(trial) && better(score(trial), score(menu))) { menu = trial; improved = true; }
@@ -210,12 +264,13 @@ function choose(o) {
     }
     if (better(score(menu), score(best))) best = menu;
   }
-  return { menu: arrange(best, o.fasting), fits: score(best)[0] === 1, cheapest: cheapest.reduce((s, d) => s + cost[d], 0) };
+  return { menu: arrange(best, o.fasting, o.locked), fits: score(best)[0] === 1, cheapest: cheapest.reduce((s, d) => s + cost[d], 0) };
 }
-function arrange(menu, fasting) {
-  const left = menu.slice(), out = new Array(menu.length).fill(null);
-  if (fasting) for (const day of LEAN_DAYS) { const i = left.findIndex(d => D.dishes[d].posno); if (i >= 0) out[day] = left.splice(i, 1)[0]; }
-  for (let day = 0; day < out.length; day++) {
+function arrange(menu, fasting, locked) {
+  const out = new Array(7).fill(null), left = menu.slice();
+  for (const [day, d] of Object.entries(locked)) { out[day] = d; left.splice(left.indexOf(d), 1); }
+  if (fasting) for (const day of LEAN_DAYS) { if (out[day]) continue; const i = left.findIndex(d => D.dishes[d].posno); if (i >= 0) out[day] = left.splice(i, 1)[0]; }
+  for (let day = 0; day < 7; day++) {
     if (out[day]) continue;
     const near = [out[day - 1], out[day + 1]].filter(Boolean).map(d => D.dishes[d].kind);
     let i = left.findIndex(d => !near.includes(D.dishes[d].kind)); if (i < 0) i = 0;
@@ -225,14 +280,15 @@ function arrange(menu, fasting) {
 }
 
 // --- листа и маркети
-function shop(menu, people, pantry) {
-  const scale = people / PORTIONS, need = {}, home = { ...pantry }, fromHome = {}, lines = [];
-  for (const d of menu) for (const [id, q] of D.dishes[d].parts) need[id] = (need[id] || 0) + q * scale;
+function shop() {
+  const scale = S.people / PORTIONS, need = {}, home = { ...S.pantry }, fromHome = {}, lines = [], source = {};
+  for (const d of S.menu) for (const [id, q] of D.dishes[d].parts) { need[id] = (need[id] || 0) + q * scale; source[id] = "мени"; }
+  for (const [id, q] of Object.entries(S.own)) { if (!D.needs[id]) continue; need[id] = (need[id] || 0) + q; source[id] = source[id] ? "мени и мое" : "мое"; }
   for (const [id, raw] of Object.entries(need)) {
     const q = Math.round(raw * 100) / 100, have = Math.min(q, home[id] || 0);
     if (have > 0) { fromHome[id] = have; home[id] -= have; }
     const wanted = Math.round((q - have) * 100) / 100;
-    if (wanted > 0.005) lines.push({ id, wanted, offers: Object.fromEntries(CHAINS.map(c => [c, offer(id, c, wanted)])) });
+    if (wanted > 0.005) lines.push({ id, wanted, source: source[id], offers: Object.fromEntries(CHAINS.map(c => [c, offer(id, c, wanted)])) });
   }
   const stores = CHAINS.map(c => ({ chain: c, till: lines.reduce((s, l) => s + (l.offers[c] ? l.offers[c].cost : 0), 0), missing: lines.filter(l => !l.offers[c]).map(l => D.needs[l.id].name) }));
   const full = stores.filter(s => !s.missing.length).sort((a, b) => a.till - b.till);
@@ -240,29 +296,34 @@ function shop(menu, people, pantry) {
   for (let a = 0; a < CHAINS.length; a++) for (let b = a + 1; b < CHAINS.length; b++) {
     let total = 0, ok = true; const n = [0, 0];
     for (const l of lines) { const x = l.offers[CHAINS[a]], y = l.offers[CHAINS[b]]; if (!x && !y) { ok = false; break; } if (!y || (x && x.byUnit <= y.byUnit)) { total += x.byUnit; n[0]++; } else { total += y.byUnit; n[1]++; } }
-    if (ok && (!split || total < split.total)) split = { a: CHAINS[a], b: CHAINS[b], total, n };
+    if (ok && lines.length && (!split || total < split.total)) split = { a: CHAINS[a], b: CHAINS[b], total, n };
   }
   const best = full[0] ? full[0].chain : null;
-  for (const l of lines) {                                   // што останува дома по купувањето
+  for (const l of lines) {
     const o = best ? l.offers[best] : Object.values(l.offers).filter(Boolean).sort((x, y) => x.cost - y.cost)[0];
     if (o && D.needs[l.id].keeps && o.got - l.wanted > 0.005) home[l.id] = (home[l.id] || 0) + o.got - l.wanted;
   }
   for (const k of Object.keys(home)) if (home[k] <= 0.005) delete home[k];
-  return { lines, stores, best, split, fromHome, home };
+  return { lines, stores, best, bestTill: full[0] ? full[0].till : null, split, fromHome, home };
 }
 
 // --- состојба
-const fresh = () => ({ budget: 1100, people: 4, fasting: false, favs: DEFAULT_FAVS.filter(d => D.dishes[d]), history: [], pantry: {}, week: 1, menu: null, skipped: {} });
+const fresh = () => ({ budget: 1100, people: 4, fasting: false, thrifty: false, favs: DEFAULT_FAVS.filter(d => D.dishes[d]), history: [], pantry: {}, week: 1,
+  menu: null, skipped: {}, locked: {}, own: {}, done: [], tab: "menu", open: -1 });
 let S = fresh();
-try { const saved = JSON.parse(localStorage.getItem("my-shopping") || "null"); if (saved && saved.budget) S = { ...fresh(), ...saved, favs: (saved.favs || []).filter(d => D.dishes[d]) }; } catch (e) {}
-const save = () => { try { localStorage.setItem("my-shopping", JSON.stringify(S)); } catch (e) {} };
+try { const saved = JSON.parse(localStorage.getItem("my-shopping-2") || "null"); if (saved && saved.budget) S = { ...fresh(), ...saved, favs: (saved.favs || []).filter(d => D.dishes[d]) }; } catch (e) {}
+const save = () => { try { localStorage.setItem("my-shopping-2", JSON.stringify(S)); } catch (e) {} };
+const V = { chain: "", group: "", best: false, noCard: false, shown: 40, q: "", needGroup: "" };       // што се гледа, не се памти
 function avoided() {
   const recent = S.history.slice(-3), out = new Set(recent.length ? recent[recent.length - 1] : []);
   for (const week of recent.slice(0, -1)) for (const d of week) if (!S.favs.includes(d)) out.add(d);
   return [...out];
 }
-function plan() { const r = choose({ budget: S.budget, people: S.people, favs: S.favs, fasting: S.fasting, avoid: avoided() }); S.menu = r.menu; S.fits = r.fits; S.cheapest = r.cheapest; S.skipped = {}; }
-
+function plan() {
+  for (const k of Object.keys(S.locked)) if (!D.dishes[S.locked[k]]) delete S.locked[k];
+  const r = choose({ budget: S.budget, people: S.people, favs: S.favs, fasting: S.fasting, thrifty: S.thrifty, avoid: avoided(), locked: S.locked });
+  S.menu = r.menu; S.fits = r.fits; S.cheapest = r.cheapest; S.skipped = {}; S.open = -1;
+}
 function swap(i) {
   const scale = S.people / PORTIONS, cur = S.menu[i];
   if (!S.skipped[i]) S.skipped[i] = [cur];
@@ -270,41 +331,117 @@ function swap(i) {
   const mustLean = S.fasting && LEAN_DAYS.includes(i);
   const ok = d => !S.menu.includes(d) && !avoid.has(d) && (!mustLean || D.dishes[d].posno) && others.filter(x => D.dishes[x].kind === D.dishes[d].kind).length < 2;
   let pool = MAINS.filter(d => ok(d) && !S.skipped[i].includes(d));
-  if (!pool.length) { S.skipped[i] = [cur]; pool = MAINS.filter(ok); }      // сите се видени: почни го кругот одново
+  if (!pool.length) { S.skipped[i] = [cur]; pool = MAINS.filter(ok); }
   if (!pool.length) return;
   const within = pool.filter(d => rest + dishCost(d, scale) <= S.budget);
   const pick = within.length ? within.sort((a, b) => dishCost(b, scale) - dishCost(a, scale))[0] : pool.sort((a, b) => dishCost(a, scale) - dishCost(b, scale))[0];
-  S.menu[i] = pick; S.skipped[i].push(pick);
+  S.menu[i] = pick; S.skipped[i].push(pick); delete S.locked[i]; S.open = -1;
 }
 
-// --- приказ
-function render() {
+// --- приказ: мени
+function renderMenu(R) {
   const scale = S.people / PORTIONS, total = S.menu.reduce((s, d) => s + dishCost(d, scale), 0);
-  $("stamp").textContent = D.city + " · цени од " + D.day;
-  $("budget").value = S.budget; $("budgetRange").value = S.budget; $("people").textContent = S.people; $("fasting").checked = S.fasting;
+  $("budget").value = S.budget; $("budgetRange").value = S.budget; $("people").textContent = S.people; $("fasting").checked = S.fasting; $("thrifty").checked = S.thrifty;
   $("favCount").textContent = S.favs.length + " избрани";
   $("favs").innerHTML = MAINS.map(d => `<button class="chip" aria-pressed="${S.favs.includes(d)}" data-fav="${esc(d)}">${esc(d)}</button>`).join("");
   $("weekTitle").textContent = "Мени за недела " + S.week;
   const over = total > S.budget + 0.5;
   $("alert").hidden = !over;
   if (over) $("alert").textContent = `Буџетот не стига за седум јадења. Најевтиното мени за ${S.people} чини ${den(S.cheapest)}`;
-  $("menu").innerHTML = S.menu.map((d, i) => `<div class="day"><span class="d">${DAYS[i]}</span><span class="dish"><b>${esc(d)}</b>` +
-    ((S.favs.includes(d) || D.dishes[d].posno) ? `<span class="tags">${S.favs.includes(d) ? '<span class="tag">омилено</span>' : ""}${D.dishes[d].posno ? '<span class="tag lean">посно</span>' : ""}</span>` : "") +
-    `</span><span class="price">${den(dishCost(d, scale))}</span><button class="swap" data-swap="${i}" aria-label="Замени го јадењето за ${DAYS[i]}" title="Друго јадење">↻</button></div>`).join("") +
+  $("menu").innerHTML = S.menu.map((d, i) => {
+    const tags = (S.favs.includes(d) ? '<span class="tag">омилено</span>' : "") + (D.dishes[d].posno ? '<span class="tag good">посно</span>' : "");
+    const parts = S.open === i ? `<div class="parts">${D.dishes[d].parts.map(([id, q]) => `<span><span>${esc(lower(D.needs[id].name))}${needPromo[id] ? " · акција во " + esc(LABEL[minChain[id]]) : ""}</span><span>${amount(q * scale, D.needs[id].unit)}</span></span>`).join("")}` +
+      `<select class="pick" data-pick="${i}" aria-label="Друго јадење за ${DAYS[i]}"><option value="">Избери друго јадење…</option>${MAINS.filter(x => x !== d).map(x => `<option value="${esc(x)}">${esc(x)} · ${den(dishCost(x, scale))}</option>`).join("")}</select></div>` : "";
+    return `<div class="day"><span class="d">${DAYS[i]}</span><button class="dishbtn" data-open="${i}" aria-expanded="${S.open === i}"><b>${esc(d)}</b>${tags ? `<span class="tags">${tags}</span>` : ""}</button>` +
+      `<span class="price">${den(dishCost(d, scale))}</span><button class="icon" data-swap="${i}" aria-label="Друго јадење за ${DAYS[i]}">↻</button>` +
+      `<button class="icon" data-lock="${i}" aria-pressed="${S.locked[i] === d}" aria-label="Задржи го јадењето за ${DAYS[i]}">${LOCK}</button>${parts}</div>`;
+  }).join("") +
     `<div class="total"><span>Состојки за неделата</span><span class="big">${den(total)}</span></div><div class="meter"><i style="width:${Math.min(100, 100 * total / S.budget)}%"></i></div>` +
     `<p class="note">${over ? "Над буџетот за " + den(total - S.budget) : "Останува " + den(S.budget - total) + " од буџетот"}</p>`;
+  $("menuStore").innerHTML = (R.best ? `<div class="row"><span class="who">${esc(LABEL[R.best])}<span class="tag good">најевтино со сè</span></span><span class="price">${den(R.bestTill)}</span><span class="why">целата листа на едно место, сметка на каса</span></div>` : `<p class="note" style="margin:0">Ниту еден маркет ја нема целата листа.</p>`) +
+    `<button class="ghost" data-go="list" style="width:100%;margin-top:12px">Отвори ја листата (${R.lines.length} ставки)</button>`;
+  const seen = new Set(), top = PROMOS.filter(p => p.best && !p.card && !seen.has(p.chain) && seen.add(p.chain)).slice(0, 4);
+  $("teaser").innerHTML = top.map(promoCard).join("") + `<button class="ghost" data-go="promos" style="width:100%;margin-top:12px">Сите ${PROMOS.length} акции</button>`;
+}
 
-  const R = shop(S.menu, S.people, S.pantry); S.after = R.home;
-  $("stores").innerHTML = R.stores.slice().sort((a, b) => (a.missing.length > 0) - (b.missing.length > 0) || a.till - b.till).map(s =>
-    `<div class="store${s.missing.length ? " partial" : ""}"><span class="who">${esc(LABEL[s.chain])}${s.chain === R.best ? '<span class="pill">најевтино со сè</span>' : ""}</span><span class="price">${den(s.till)}</span>` +
-    `<span class="why">${s.missing.length ? "нема: " + esc(s.missing.join(", ").toLowerCase()) : "ја има целата листа, сметка на каса"}</span></div>`).join("") +
-    (R.split ? `<p class="note">Поделено на ${esc(LABEL[R.split.a])} (${R.split.n[0]} ставки) и ${esc(LABEL[R.split.b])} (${R.split.n[1]}): ${den(R.split.total)} за потрошеното.</p>` : "");
-  const home = Object.entries(R.fromHome);
-  $("listTitle").textContent = R.lines.length + " ставки за купување" + (home.length ? ", " + home.length + " од дома" : "");
-  $("items").innerHTML = R.lines.slice().sort((a, b) => D.needs[a.id].name.localeCompare(D.needs[b.id].name, "mk")).map(l => {
-    const where = CHAINS.filter(c => l.offers[c]).sort((a, b) => l.offers[a].byUnit - l.offers[b].byUnit)[0];
-    return `<div class="item"><span>${esc(D.needs[l.id].name)}</span><span class="q">${amount(l.wanted, D.needs[l.id].unit)}</span><span class="w">најевтино: ${esc(LABEL[where])} · ${esc(l.offers[where].name.toLowerCase())}</span></div>`;
-  }).join("") + home.map(([id, q]) => `<div class="item home"><span>${esc(D.needs[id].name)}</span><span class="q">${amount(q, D.needs[id].unit)}</span><span class="w">има дома од претходно</span></div>`).join("");
+// --- приказ: акции
+const promoCard = p => {
+  const tags = (p.best ? `<span class="tag good">најевтино во ${esc(D.city)}: ${esc(lower(D.needs[p.need].name))}</span>` : "") + (p.card ? '<span class="tag">со картичка</span>' : "") +
+    (p.else ? (p.else[1] < p.price ? `<span class="tag warn">истото кај ${esc(LABEL[p.else[0]])}: ${den(p.else[1])}</span>` : p.else[1] > p.price ? `<span class="tag good">кај ${esc(LABEL[p.else[0]])} е ${den(p.else[1])}</span>` : `<span class="tag">иста цена кај ${esc(LABEL[p.else[0]])}</span>`) : "");
+  return `<div class="promo"><div><div class="n">${esc(p.name)}</div><div class="m">${esc(LABEL[p.chain])}${p.until ? " · до " + p.until.slice(8) + "." + p.until.slice(5, 7) + "." : ""}</div></div>` +
+    `<div class="p"><b>${den(p.price)}</b><s>${den(p.regular)}</s><em>−${p.pct}%</em></div><div class="tags">${tags}${p.need ? `<button class="add" data-add="${esc(p.need)}">${S.own[p.need] ? "на листа ✓" : "+ на листа"}</button>` : ""}</div></div>`;
+};
+const today = new Date().toISOString().slice(0, 10);
+const PROMOS = D.promos.map(p => ({ chain: CHAINS[p[0]], name: p[1], price: p[2], regular: p[3], pct: p[4], until: p[5], card: !!p[6], need: p[7], best: !!p[8], else: p[9] >= 0 ? [CHAINS[p[9]], p[10]] : null,
+  group: p[7] && D.needs[p[7]] ? D.needs[p[7]].group : "Друго" })).filter(p => !p.until || p.until >= today);
+function renderPromos() {
+  const chip = (attr, value, label, on) => `<button class="chip" aria-pressed="${on}" ${attr}="${esc(value)}">${esc(label)}</button>`;
+  $("promoChains").innerHTML = chip("data-pc", "", "Сите маркети", V.chain === "") + CHAINS.map(c => chip("data-pc", c, LABEL[c] + " " + PROMOS.filter(p => p.chain === c).length, V.chain === c)).join("");
+  const groups = [...new Set(PROMOS.map(p => p.group))];
+  const slide = $("promoGroups").scrollLeft;
+  $("promoGroups").innerHTML = chip("data-pg", "", "Сè", V.group === "") + D.groups.concat("Друго").filter(g => groups.includes(g)).map(g => chip("data-pg", g, g, V.group === g)).join("");
+  $("promoGroups").scrollLeft = slide;
+  $("onlyBest").checked = V.best; $("noCard").checked = V.noCard;
+  const list = PROMOS.filter(p => (!V.chain || p.chain === V.chain) && (!V.group || p.group === V.group) && (!V.best || p.best) && (!V.noCard || !p.card));
+  $("promoStats").textContent = `${PROMOS.length} важечки акции. ${PROMOS.filter(p => p.best).length} се најевтини во градот за својата потреба. Прикажани: ${Math.min(V.shown, list.length)} од ${list.length}.`;
+  $("promoList").innerHTML = list.slice(0, V.shown).map(promoCard).join("") || `<p class="note" style="margin:0">Нема акции со овој избор.</p>`;
+  $("morePromos").hidden = list.length <= V.shown;
+}
+
+// --- приказ: цени
+function renderPrices() {
+  const slide = $("groupChips").scrollLeft;
+  $("groupChips").innerHTML = D.groups.map(g => `<button class="chip" aria-pressed="${V.needGroup === g}" data-ng="${esc(g)}">${esc(g)}</button>`).join("");
+  $("groupChips").scrollLeft = slide;
+  const q = lower(V.q.trim());
+  const needs = Object.entries(D.needs).filter(([id, n]) => q ? lower(n.name).includes(q) : V.needGroup ? n.group === V.needGroup : ["mleko-trajno", "leb-bel", "jajca", "maslo-soncogledovo", "seker", "brasno-belo", "kafe-meleno", "pileski-kopani"].includes(id));
+  $("needResults").innerHTML = needs.slice(0, 40).map(([id, n]) => {
+    const cells = CHAINS.map(c => { const r = n.offers[c][0]; return `<div class="cell${r && c === minChain[id] ? " min" : ""}">${esc(LABEL[c])}<b>${r ? den(r[2]).replace(" ден.", "") : "–"}</b></div>`; }).join("");
+    const r = minChain[id] ? n.offers[minChain[id]][0] : null;
+    return `<div class="row"><span class="who">${esc(n.name)}<span class="count">ден. за 1 ${esc(n.unit)}</span></span><button class="add" data-add="${esc(id)}">${S.own[id] ? "на листа ✓" : "+ на листа"}</button>` +
+      `<div class="grid4">${cells}</div><span class="why">${r ? "најевтино: " + esc(lower(r[0])) + (r[4] ? " · на акција" : "") : "нема цена"}</span></div>`;
+  }).join("") || `<p class="note" style="margin:0">Нема таква потреба. Пробај со друг збор.</p>`;
+  const products = [];
+  if (q.length >= 3) for (const [id, n] of Object.entries(D.needs)) for (const c of CHAINS) for (const r of n.offers[c]) if (lower(r[0]).includes(q)) products.push({ c, r, unit: n.unit });
+  products.sort((a, b) => a.r[1] - b.r[1]);
+  $("productBox").hidden = !products.length;
+  $("productResults").innerHTML = products.slice(0, 40).map(({ c, r, unit }) => `<div class="row"><span class="who" style="font-weight:500">${esc(r[0])}</span><span class="price">${den(r[1])}</span><span class="why">${esc(LABEL[c])} · ${den(r[2])} за 1 ${esc(unit)}${r[4] ? " · на акција" : ""}</span></div>`).join("");
+}
+
+// --- приказ: листа
+function renderList(R) {
+  const tills = R.stores.filter(s => !s.missing.length).map(s => s.till), saved = tills.length > 1 ? Math.max(...tills) - Math.min(...tills) : 0;
+  $("stores").innerHTML = R.lines.length ? R.stores.slice().sort((a, b) => (a.missing.length > 0) - (b.missing.length > 0) || a.till - b.till).map(s =>
+    `<div class="row${s.missing.length ? " partial" : ""}"><span class="who">${esc(LABEL[s.chain])}${s.chain === R.best ? '<span class="tag good">најевтино со сè</span>' : ""}</span><span class="price">${den(s.till)}</span>` +
+    `<span class="why">${s.missing.length ? "нема: " + esc(lower(s.missing.join(", "))) : "ја има целата листа, сметка на каса"}</span></div>`).join("") +
+    (saved > 0.5 ? `<p class="note">Разлика меѓу најевтиниот и најскапиот маркет со целата листа: ${den(saved)}</p>` : "") +
+    (R.split ? `<p class="note">Поделено на ${esc(LABEL[R.split.a])} (${R.split.n[0]} ставки) и ${esc(LABEL[R.split.b])} (${R.split.n[1]}): ${den(R.split.total)} за потрошеното.</p>` : "") : `<p class="note" style="margin:0">Листата е празна.</p>`;
+  const home = Object.entries(R.fromHome), step = id => D.needs[id].unit === "парче" ? 1 : 0.5;
+  $("listTitle").textContent = `Листа за пазарење: ${R.lines.length} ставки`;
+  $("items").innerHTML = R.lines.slice().sort((a, b) => S.done.includes(a.id) - S.done.includes(b.id) || D.needs[a.id].name.localeCompare(D.needs[b.id].name, "mk")).map(l => {
+    const where = CHAINS.filter(c => l.offers[c]).sort((a, b) => l.offers[a].byUnit - l.offers[b].byUnit)[0], n = D.needs[l.id], done = S.done.includes(l.id);
+    const own = S.own[l.id] ? `<button class="round small" data-own="${esc(l.id)}" data-step="${-step(l.id)}" aria-label="Помалку">−</button><button class="round small" data-own="${esc(l.id)}" data-step="${step(l.id)}" aria-label="Повеќе">+</button>` : "";
+    return `<label class="item${done ? " done" : ""}"><input type="checkbox" data-done="${esc(l.id)}" ${done ? "checked" : ""}><span class="n">${esc(n.name)}</span><span class="q">${amount(l.wanted, n.unit)}${own}</span>` +
+      `<span class="w">${where ? "најевтино: " + esc(LABEL[where]) + " · " + esc(lower(l.offers[where].name)) : "нема цена"}${l.source === "мени" ? "" : " · додадено од тебе"}</span></label>`;
+  }).join("") + home.map(([id, q]) => `<div class="item home"><span></span><span class="n">${esc(D.needs[id].name)}</span><span class="q">${amount(q, D.needs[id].unit)}</span><span class="w">има дома од претходно</span></div>`).join("") ||
+    `<p class="note" style="margin:0">Додај ставки од „Цени" или состави мени.</p>`;
+  const pantry = Object.entries(S.pantry);
+  $("pantry").innerHTML = `<h2 style="margin-bottom:6px">Дома имам</h2>` + (pantry.length ? `<p style="margin:0 0 10px;font-size:14px">${pantry.map(([id, q]) => esc(lower(D.needs[id] ? D.needs[id].name : id)) + " " + amount(q, D.needs[id] ? D.needs[id].unit : "кг")).join(", ")}</p><button class="ghost" id="emptyPantry">Испразни</button>` :
+    `<p class="note" style="margin:0">Ништо засега. По „Следна недела" тука се запишува што останало од купените пакувања.</p>`);
+}
+function listText(R) {
+  const out = ["Листа за пазарење (My Shopping)"];
+  if (R.best) out.push(`Најевтино со сè: ${LABEL[R.best]}, ${den(R.bestTill)}`);
+  for (const l of R.lines.slice().sort((a, b) => D.needs[a.id].name.localeCompare(D.needs[b.id].name, "mk"))) if (!S.done.includes(l.id)) out.push(`- ${D.needs[l.id].name}, ${amount(l.wanted, D.needs[l.id].unit)}`);
+  return out.join("\n");
+}
+
+function render() {
+  $("stamp").textContent = D.city + " · цени од " + D.day;
+  for (const t of ["menu", "promos", "prices", "list"]) $("view-" + t).hidden = S.tab !== t;
+  document.querySelectorAll("nav.tabs button").forEach(b => b.dataset.tab === S.tab ? b.setAttribute("aria-current", "page") : b.removeAttribute("aria-current"));
+  const R = shop(); S.after = R.home; window.R = R;
+  if (S.tab === "menu") renderMenu(R); else if (S.tab === "promos") renderPromos(); else if (S.tab === "prices") renderPrices(); else renderList(R);
   save();
 }
 function replan() { plan(); render(); }
@@ -315,11 +452,44 @@ $("budgetRange").addEventListener("change", replan);
 $("less").addEventListener("click", () => { if (S.people > 1) { S.people--; replan(); } });
 $("more").addEventListener("click", () => { if (S.people < 10) { S.people++; replan(); } });
 $("fasting").addEventListener("change", e => { S.fasting = e.target.checked; replan(); });
+$("thrifty").addEventListener("change", e => { S.thrifty = e.target.checked; replan(); });
 $("favs").addEventListener("click", e => { const d = e.target.dataset.fav; if (!d) return; S.favs = S.favs.includes(d) ? S.favs.filter(x => x !== d) : [...S.favs, d]; replan(); });
-$("menu").addEventListener("click", e => { const b = e.target.closest("[data-swap]"); if (!b) return; swap(+b.dataset.swap); render(); });
-$("next").addEventListener("click", () => { S.history = [...S.history, S.menu].slice(-4); S.pantry = S.after || {}; S.week++; replan(); window.scrollTo({ top: 0, behavior: "smooth" }); });
-$("reset").addEventListener("click", () => { S = fresh(); replan(); });
+$("menu").addEventListener("click", e => {
+  const b = e.target.closest("button"); if (!b) return;
+  if (b.dataset.swap) swap(+b.dataset.swap);
+  else if (b.dataset.lock) { const i = +b.dataset.lock; if (S.locked[i] === S.menu[i]) delete S.locked[i]; else S.locked[i] = S.menu[i]; }
+  else if (b.dataset.open) S.open = S.open === +b.dataset.open ? -1 : +b.dataset.open;
+  render();
+});
+$("menu").addEventListener("change", e => {
+  const i = +e.target.dataset.pick, d = e.target.value; if (!e.target.dataset.pick || !D.dishes[d]) return;
+  const j = S.menu.indexOf(d);
+  if (j >= 0) { S.menu[j] = S.menu[i]; delete S.locked[j]; }
+  S.menu[i] = d; S.locked[i] = d; S.open = -1; render();
+});
+$("next").addEventListener("click", () => { for (const id of S.done) delete S.own[id]; S.history = [...S.history, S.menu].slice(-4); S.pantry = S.after || {}; S.week++; S.locked = {}; S.done = []; replan(); window.scrollTo({ top: 0, behavior: "smooth" }); });
+$("reset").addEventListener("click", () => { const tab = S.tab; S = fresh(); S.tab = tab; replan(); });
+document.addEventListener("click", e => {
+  const t = e.target.closest("[data-tab],[data-go]"); if (t) { S.tab = t.dataset.tab || t.dataset.go; render(); window.scrollTo({ top: 0 }); return; }
+  const b = e.target.closest("button"); if (!b) return;
+  if (b.dataset.pc !== undefined) { V.chain = b.dataset.pc; V.shown = 40; render(); }
+  else if (b.dataset.pg !== undefined) { V.group = b.dataset.pg; V.shown = 40; render(); }
+  else if (b.dataset.ng !== undefined) { V.needGroup = V.needGroup === b.dataset.ng ? "" : b.dataset.ng; V.q = ""; $("q").value = ""; render(); }
+  else if (b.dataset.add) { const id = b.dataset.add; if (S.own[id]) delete S.own[id]; else S.own[id] = 1; render(); }
+  else if (b.dataset.own) { e.preventDefault(); const id = b.dataset.own, q = Math.round(((S.own[id] || 0) + +b.dataset.step) * 100) / 100; if (q <= 0) delete S.own[id]; else S.own[id] = q; render(); }
+  else if (b.id === "emptyPantry") { S.pantry = {}; render(); }
+});
+$("morePromos").addEventListener("click", () => { V.shown += 60; render(); });
+$("onlyBest").addEventListener("change", e => { V.best = e.target.checked; V.shown = 40; render(); });
+$("noCard").addEventListener("change", e => { V.noCard = e.target.checked; V.shown = 40; render(); });
+$("q").addEventListener("input", e => { V.q = e.target.value; V.needGroup = ""; renderPrices(); });
+$("items").addEventListener("change", e => { const id = e.target.dataset.done; if (!id) return; S.done = e.target.checked ? [...S.done, id] : S.done.filter(x => x !== id); render(); });
+$("clearDone").addEventListener("click", () => { S.done = []; render(); });
+$("copy").addEventListener("click", () => {
+  const text = listText(window.R), box = $("copyText"), show = ok => { $("copied").hidden = !ok; box.hidden = ok; if (!ok) { box.value = text; box.select(); } };
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(() => show(true), () => show(false)); else show(false);
+});
 
-if (!S.menu || S.menu.some(d => !D.dishes[d])) plan();
+if (!S.menu || S.menu.length !== 7 || S.menu.some(d => !D.dishes[d])) plan();
 render();
 </script>
