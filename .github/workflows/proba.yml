@@ -1,0 +1,43 @@
+name: Проба
+
+# Кратка проба на читањето (collector/probe.py). Се пушта рачно; резултатот оди во data/probe/.
+on:
+  workflow_dispatch:
+    inputs:
+      module:
+        description: "Модул што се пушта"
+        required: false
+        default: "collector.probe"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: daily-prices
+  cancel-in-progress: false
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: Проба
+        env:
+          MODULE: ${{ github.event.inputs.module }}
+        run: |
+          case "$MODULE" in collector.probe*) python -m "$MODULE" ;; *) echo "непознат модул"; exit 1 ;; esac
+      - name: Запис
+        if: always()
+        run: |
+          git config user.name "my-shopping-bot"
+          git config user.email "my-shopping-bot@users.noreply.github.com"
+          git add data/probe || true
+          git diff --cached --quiet || git commit -m "Проба на читањето"
+          git pull --rebase
+          git push
