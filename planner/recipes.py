@@ -58,7 +58,7 @@ DISHES: dict[str, tuple[str, list[tuple[str, float]]]] = {
     "Компир манџа со свинско": ("свинско", [("kompir", 1.2), ("svinsko-meso", 0.5), ("kromid", 0.2), ("morkov", 0.1), ("crven-piper", 0.01), (M, 0.05)]),
     "Турли тава": ("свинско", [("svinsko-meso", 0.5), ("kompir", 0.5), ("modar-patlidzan", 0.4), ("piperki", 0.3), ("domati", 0.4), ("kromid", 0.2), (M, 0.05)]),
     "Зелка со месо": ("свинско", [("zelka", 1.5), ("svinsko-meso", 0.5), ("kromid", 0.15), ("crven-piper", 0.01), (M, 0.05)]),
-    "Боранија со месо": ("свинско", [("zamrznat-zelencuk", 0.8), ("svinsko-meso", 0.4), ("kromid", 0.15), ("domatno-pire", 0.2), (M, 0.05)]),
+    "Боранија со месо": ("свинско", [("boranija-zamrznata", 0.8), ("svinsko-meso", 0.4), ("kromid", 0.15), ("domatno-pire", 0.2), (M, 0.05)]),
     "Селско месо": ("свинско", [("svinsko-meso", 0.6), ("pecurki", 0.3), ("kromid", 0.3), ("piperki", 0.2), ("domatno-pire", 0.2), (M, 0.05)]),
     "Свинска вешалица со пржени компири": ("свинско", [("svinsko-meso", 0.7), ("kompir", 1.2), (M, 0.15)]),
     "Пастрмајлија": ("свинско", [("brasno-belo", 0.6), ("kvasec-svez", 0.02), ("svinsko-meso", 0.5), ("jajca", 4), (M, 0.05)]),
