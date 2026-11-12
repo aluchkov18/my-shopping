@@ -40,4 +40,18 @@ jobs:
           git config user.email "my-shopping-bot@users.noreply.github.com"
           git add data
           git diff --cached --quiet || git commit -m "Цени $(TZ=Europe/Skopje date +%F)"
+          git pull --rebase
+          git push
+      - name: Дневна слика и порака на телефон
+        continue-on-error: true
+        env:
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+          NTFY_CLICK: ${{ secrets.NTFY_CLICK }}
+        run: |
+          day=$(TZ=Europe/Skopje date +%F)
+          python -m catalog.history "$day"
+          python -m alerts.send
+          git add catalog/history alerts/dnevnik.csv
+          git diff --cached --quiet || git commit -m "Слика на цените $day"
+          git pull --rebase
           git push

@@ -1,0 +1,37 @@
+name: Пробна порака
+
+# Праќа пробна порака на телефон. Се пушта рачно или со промена на alerts/proba.txt.
+on:
+  push:
+    paths:
+      - "alerts/proba.txt"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: daily-prices
+  cancel-in-progress: false
+
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Пробна порака
+        env:
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+          NTFY_CLICK: ${{ secrets.NTFY_CLICK }}
+        run: |
+          python -m alerts.send proba
+          git config user.name "my-shopping-bot"
+          git config user.email "my-shopping-bot@users.noreply.github.com"
+          git add alerts/dnevnik.csv
+          git diff --cached --quiet || git commit -m "Пробна порака"
+          git pull --rebase
+          git push

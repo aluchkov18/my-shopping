@@ -1,0 +1,31 @@
+# Потреби за кои утринската порака јавува промена на цената. Една по ред: ознака од catalog/needs.py.
+# Почетен избор: состојките на омилените јадења и основните намирници.
+mleko-trajno        # трајно млеко
+jogurt              # јогурт
+kiselo-mleko        # кисело млеко
+sirenje-belo        # бело сирење
+kaskaval            # кашкавал
+margarin            # маргарин
+jajca               # јајца
+leb-bel             # бел леб
+brasno-belo         # бело брашно
+oriz                # ориз
+grav                # грав
+lekja               # леќа
+grasok              # грашок
+maslo-soncogledovo  # сончогледово масло
+seker               # шеќер
+crven-piper         # црвен пипер
+kafe-meleno         # мелено кафе
+pileski-kopani      # пилешки копани и батаци
+pileski-gradi       # пилешки гради и филе
+meleno-meso         # мелено месо
+kolbasi             # колбаси
+slanina-puseno      # сланина и пушено месо
+kompir              # компири
+kromid              # кромид
+morkov              # моркови
+zelka               # зелка
+prasok-perenje      # прашок за перење
+sredstvo-sadovi     # течност за садови
+toaletna-hartija    # тоалетна хартија
