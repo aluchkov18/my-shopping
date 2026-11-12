@@ -100,6 +100,8 @@ details .chips { margin-top: 12px; }
 .item .w { grid-column: 2 / -1; color: var(--muted); font-size: 12px; overflow-wrap: anywhere; }
 .item.done span.n { text-decoration: line-through; color: var(--muted); }
 .item.home { color: var(--muted); }
+.mini { border: 1px solid var(--line); background: none; border-radius: 999px; padding: 1px 8px; font-size: 12px; color: var(--muted); }
+.mini[aria-pressed=true] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
 
 .promo { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 12px; padding: 12px 0; border-bottom: 1px solid var(--line); }
 .promo:last-child { border-bottom: 0; }
@@ -140,6 +142,7 @@ footer { color: var(--muted); font-size: 12.5px; line-height: 1.5; }
       <div class="field"><span class="name">Членови</span><span class="stepper"><button class="round" id="less" aria-label="Помалку членови">−</button><span id="people"></span><button class="round" id="more" aria-label="Повеќе членови">+</button></span></div>
       <div class="field"><label for="fasting">Посно во среда и петок</label><input class="switch" id="fasting" type="checkbox"></div>
       <div class="field"><label for="thrifty">Штедливо мени</label><input class="switch" id="thrifty" type="checkbox"></div>
+      <details id="cardBox"><summary><span>Картички за попуст</span><span class="count" id="cardCount"></span></summary><div class="chips" id="cards"></div><p class="note">Означи кај кои маркети имаш картичка. Кај другите, цените со картичка не се бројат.</p></details>
       <details id="favBox"><summary><span>Омилени јадења</span><span class="count" id="favCount"></span></summary><div class="chips" id="favs"></div></details>
     </section>
     <section>
@@ -188,6 +191,7 @@ footer { color: var(--muted); font-size: 12.5px; line-height: 1.5; }
       <p class="note" id="copied" hidden>Листата е копирана. Залепи ја во порака.</p>
       <textarea id="copyText" hidden rows="8" style="width:100%;box-sizing:border-box;margin-top:10px;font:13px var(--mono);background:var(--surface);color:inherit;border:1px solid var(--line);border-radius:10px;padding:10px"></textarea>
     </section>
+    <section class="panel" id="regular"></section>
     <section class="panel" id="pantry"></section>
   </div>
 
@@ -248,13 +252,28 @@ function amount(q, unit) {
 const lower = s => s.toLowerCase();
 const LOCK = '<svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><rect x="3" y="7" width="10" height="7" rx="1.5" fill="currentColor"/><path d="M5 7V5a3 3 0 0 1 6 0v2" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>';
 
-// --- цени
+// --- цени. Акција со картичка важи само кај маркетите каде купувачот има картичка; инаку се брои редовната цена.
+const RAW = Object.fromEntries(Object.entries(D.needs).map(([id, n]) => [id, { ...n.offers }]));
+const CARD_CHAINS = CHAINS.filter(c => Object.values(RAW).some(o => o[c].some(r => r[4] === 2)));
 const minUnit = {}, minChain = {}, needPromo = {};
-for (const [id, need] of Object.entries(D.needs)) {
-  let best = null;
-  for (const c of CHAINS) { const r = need.offers[c][0]; if (r && (!best || r[2] < best.r[2])) best = { r, c }; }
-  minUnit[id] = best ? best.r[2] : null; minChain[id] = best ? best.c : null; needPromo[id] = best ? !!best.r[4] : false;
+function reprice(cards) {
+  for (const [id, need] of Object.entries(D.needs)) {
+    let best = null;
+    for (const c of CHAINS) {
+      const rows = cards[c] === false ? RAW[id][c].map(r => r[4] === 2 ? [r[0], r[5], r[2] * r[5] / r[1], r[3], 0] : r).sort((a, b) => a[2] - b[2]) : RAW[id][c];
+      need.offers[c] = rows;
+      if (rows[0] && (!best || rows[0][2] < best.r[2])) best = { r: rows[0], c };
+    }
+    minUnit[id] = best ? best.r[2] : null; minChain[id] = best ? best.c : null; needPromo[id] = best ? !!best.r[4] : false;
+  }
 }
+reprice({});
+// едно пакување од најевтиниот производ: почетна количина и чекор за рачно додадените ставки
+function pack(id) {
+  const r = minChain[id] ? D.needs[id].offers[minChain[id]][0] : null, piece = D.needs[id].unit === "парче", size = r && r[3] ? r[3] : piece ? 1 : 0.5;
+  return piece ? Math.max(1, Math.min(Math.round(size), 10)) : Math.round(size * 100) / 100;
+}
+const BASICS = [["leb-bel", 0.6], ["mleko-trajno", 1], ["jajca", 3], ["jogurt", 0.5], ["sirenje-belo", 0.125], ["kafe-meleno", 0.05], ["seker", 0.125]];   // неделно по член, проценка
 function offer(id, chain, wanted) {
   let best = null, lowest = Infinity;
   for (const [name, price, unit, size] of D.needs[id].offers[chain]) {
@@ -319,7 +338,8 @@ function arrange(menu, fasting, locked) {
 function shop() {
   const scale = S.people / PORTIONS, need = {}, home = { ...S.pantry }, fromHome = {}, lines = [], source = {};
   for (const d of S.menu) for (const [id, q] of D.dishes[d].parts) { need[id] = (need[id] || 0) + q * scale; source[id] = "мени"; }
-  for (const [id, q] of Object.entries(S.own)) { if (!D.needs[id]) continue; need[id] = (need[id] || 0) + q; source[id] = source[id] ? "мени и мое" : "мое"; }
+  for (const [id, q] of Object.entries(S.own)) { if (!D.needs[id]) continue; need[id] = (need[id] || 0) + q; source[id] = "мое"; }
+  for (const [id, q] of Object.entries(S.regular)) { if (!D.needs[id]) continue; need[id] = (need[id] || 0) + q; source[id] = "редовно"; }
   for (const [id, raw] of Object.entries(need)) {
     const q = Math.round(raw * 100) / 100, have = Math.min(q, home[id] || 0);
     if (have > 0) { fromHome[id] = have; home[id] -= have; }
@@ -345,9 +365,11 @@ function shop() {
 
 // --- состојба
 const fresh = () => ({ budget: 1100, people: 4, fasting: false, thrifty: false, favs: DEFAULT_FAVS.filter(d => D.dishes[d]), history: [], pantry: {}, week: 1,
-  menu: null, skipped: {}, locked: {}, own: {}, done: [], tab: "menu", open: -1, watch: {}, have: [], spent: [] });
+  menu: null, skipped: {}, locked: {}, own: {}, done: [], tab: "menu", open: -1, watch: {}, have: [], spent: [], regular: {}, cards: {} });
 let S = fresh();
 try { const saved = JSON.parse(localStorage.getItem("my-shopping-2") || "null"); if (saved && saved.budget) S = { ...fresh(), ...saved, favs: (saved.favs || []).filter(d => D.dishes[d]) }; } catch (e) {}
+reprice(S.cards);
+const onList = id => S.own[id] != null || S.regular[id] != null;
 const save = () => { try { localStorage.setItem("my-shopping-2", JSON.stringify(S)); } catch (e) {} };
 const V = { chain: "", group: "", best: false, noCard: false, shown: 40, q: "", needGroup: "" };       // што се гледа, не се памти
 function avoided() {
@@ -380,6 +402,9 @@ function renderMenu(R) {
   $("budget").value = S.budget; $("budgetRange").value = S.budget; $("people").textContent = S.people; $("fasting").checked = S.fasting; $("thrifty").checked = S.thrifty;
   $("favCount").textContent = S.favs.length + " избрани";
   $("favs").innerHTML = MAINS.map(d => `<button class="chip" aria-pressed="${S.favs.includes(d)}" data-fav="${esc(d)}">${esc(d)}</button>`).join("");
+  $("cardBox").hidden = !CARD_CHAINS.length;
+  $("cardCount").textContent = "имам " + CARD_CHAINS.filter(c => S.cards[c] !== false).length + " од " + CARD_CHAINS.length;
+  $("cards").innerHTML = CARD_CHAINS.map(c => `<button class="chip" aria-pressed="${S.cards[c] !== false}" data-card="${c}">${esc(LABEL[c])}</button>`).join("");
   $("weekTitle").textContent = "Мени за недела " + S.week;
   const drops = Object.keys(S.watch).filter(id => minUnit[id] != null && minUnit[id] < S.watch[id].p - 0.05);
   $("news").hidden = !drops.length;
@@ -408,7 +433,7 @@ const promoCard = p => {
   const tags = (p.best ? `<span class="tag good">најевтино во ${esc(D.city)}: ${esc(lower(D.needs[p.need].name))}</span>` : "") + (p.card ? '<span class="tag">со картичка</span>' : "") +
     (p.else ? (p.else[1] < p.price ? `<span class="tag warn">истото кај ${esc(LABEL[p.else[0]])}: ${den(p.else[1])}</span>` : p.else[1] > p.price ? `<span class="tag good">кај ${esc(LABEL[p.else[0]])} е ${den(p.else[1])}</span>` : `<span class="tag">иста цена кај ${esc(LABEL[p.else[0]])}</span>`) : "");
   return `<div class="promo"><div><div class="n">${esc(p.name)}</div><div class="m">${esc(LABEL[p.chain])}${p.until ? " · до " + p.until.slice(8) + "." + p.until.slice(5, 7) + "." : ""}</div></div>` +
-    `<div class="p"><b>${den(p.price)}</b><s>${den(p.regular)}</s><em>−${p.pct}%</em></div><div class="tags">${tags}${p.need ? `<button class="add" data-add="${esc(p.need)}">${S.own[p.need] ? "на листа ✓" : "+ на листа"}</button>` : ""}</div></div>`;
+    `<div class="p"><b>${den(p.price)}</b><s>${den(p.regular)}</s><em>−${p.pct}%</em></div><div class="tags">${tags}${p.need ? `<button class="add" data-add="${esc(p.need)}">${onList(p.need) ? "на листа ✓" : "+ на листа"}</button>` : ""}</div></div>`;
 };
 const today = new Date().toISOString().slice(0, 10);
 const PROMOS = D.promos.map(p => ({ chain: CHAINS[p[0]], name: p[1], price: p[2], regular: p[3], pct: p[4], until: p[5], card: !!p[6], need: p[7], best: !!p[8], else: p[9] >= 0 ? [CHAINS[p[9]], p[10]] : null,
@@ -437,7 +462,7 @@ function renderPrices() {
   $("needResults").innerHTML = needs.slice(0, 40).map(([id, n]) => {
     const cells = CHAINS.map(c => { const r = n.offers[c][0]; return `<div class="cell${r && c === minChain[id] ? " min" : ""}">${esc(LABEL[c])}<b>${r ? den(r[2]).replace(" ден.", "") : "–"}</b></div>`; }).join("");
     const r = minChain[id] ? n.offers[minChain[id]][0] : null;
-    return `<div class="row"><span class="who">${esc(n.name)}<span class="count">ден. за 1 ${esc(n.unit)}</span></span><span class="acts">${minUnit[id] != null ? `<button class="icon" data-watch="${esc(id)}" aria-pressed="${!!S.watch[id]}" aria-label="Следи ја цената: ${esc(n.name)}">${S.watch[id] ? "★" : "☆"}</button>` : ""}<button class="add" data-add="${esc(id)}">${S.own[id] ? "на листа ✓" : "+ на листа"}</button></span>` +
+    return `<div class="row"><span class="who">${esc(n.name)}<span class="count">ден. за 1 ${esc(n.unit)}</span></span><span class="acts">${minUnit[id] != null ? `<button class="icon" data-watch="${esc(id)}" aria-pressed="${!!S.watch[id]}" aria-label="Следи ја цената: ${esc(n.name)}">${S.watch[id] ? "★" : "☆"}</button>` : ""}<button class="add" data-add="${esc(id)}">${onList(id) ? "на листа ✓" : "+ на листа"}</button></span>` +
       `<div class="grid4">${cells}</div><span class="why">${r ? "најевтино: " + esc(lower(r[0])) + (r[4] ? " · на акција" : "") : "нема цена"}</span></div>`;
   }).join("") || `<p class="note" style="margin:0">Нема таква потреба. Пробај со друг збор.</p>`;
   const products = [];
@@ -459,7 +484,7 @@ function sameRow(g) {
     (g.high > 1.8 * g.low ? `<span class="why"><span class="tag warn">голема разлика: провери го пакувањето на полица</span></span>` : "") + `</div>`;
 }
 function renderTools() {
-  const scale = S.people / PORTIONS, mine = id => S.watch[id] || S.own[id] ? 0 : 1;
+  const scale = S.people / PORTIONS, mine = id => S.watch[id] || onList(id) ? 0 : 1;
   const moved = D.changes.map(c => ({ id: c[0], old: c[1], now: c[2], chain: CHAINS[c[3]] })).filter(c => D.needs[c.id]).sort((a, b) => mine(a.id) - mine(b.id) || a.now / a.old - b.now / b.old);
   $("changesBox").hidden = !moved.length;
   $("changesTitle").textContent = "Промени на цени од " + D.since;
@@ -501,15 +526,18 @@ function renderList(R) {
     `<span class="why">${s.missing.length ? "нема: " + esc(lower(s.missing.join(", "))) : "ја има целата листа, сметка на каса"}</span></div>`).join("") +
     (saved > 0.5 ? `<p class="note">Разлика меѓу најевтиниот и најскапиот маркет со целата листа: ${den(saved)}</p>` : "") +
     (R.split ? `<p class="note">Поделено на ${esc(LABEL[R.split.a])} (${R.split.n[0]} ставки) и ${esc(LABEL[R.split.b])} (${R.split.n[1]}): ${den(R.split.total)} за потрошеното.</p>` : "") : `<p class="note" style="margin:0">Листата е празна.</p>`;
-  const home = Object.entries(R.fromHome), step = id => D.needs[id].unit === "парче" ? 1 : 0.5;
+  const home = Object.entries(R.fromHome), regular = Object.keys(S.regular).length;
   $("listTitle").textContent = `Листа за пазарење: ${R.lines.length} ставки`;
   $("items").innerHTML = R.lines.slice().sort((a, b) => S.done.includes(a.id) - S.done.includes(b.id) || D.needs[a.id].name.localeCompare(D.needs[b.id].name, "mk")).map(l => {
     const where = CHAINS.filter(c => l.offers[c]).sort((a, b) => l.offers[a].byUnit - l.offers[b].byUnit)[0], n = D.needs[l.id], done = S.done.includes(l.id);
-    const own = S.own[l.id] ? `<button class="round small" data-own="${esc(l.id)}" data-step="${-step(l.id)}" aria-label="Помалку">−</button><button class="round small" data-own="${esc(l.id)}" data-step="${step(l.id)}" aria-label="Повеќе">+</button>` : "";
+    const own = onList(l.id) ? `<button class="round small" data-own="${esc(l.id)}" data-step="-1" aria-label="Помалку">−</button><button class="round small" data-own="${esc(l.id)}" data-step="1" aria-label="Повеќе">+</button>` : "";
     return `<label class="item${done ? " done" : ""}"><input type="checkbox" data-done="${esc(l.id)}" ${done ? "checked" : ""}><span class="n">${esc(n.name)}</span><span class="q">${amount(l.wanted, n.unit)}${own}</span>` +
-      `<span class="w">${where ? "најевтино: " + esc(LABEL[where]) + " · " + esc(lower(l.offers[where].name)) : "нема цена"}${l.source === "мени" ? "" : " · додадено од тебе"}</span></label>`;
+      `<span class="w">${where ? "најевтино: " + esc(LABEL[where]) + " · " + esc(lower(l.offers[where].name)) : "нема цена"}${onList(l.id) ? ` · <button class="mini" data-reg="${esc(l.id)}" aria-pressed="${S.regular[l.id] != null}">секоја недела</button>` : ""}</span></label>`;
   }).join("") + home.map(([id, q]) => `<div class="item home"><span></span><span class="n">${esc(D.needs[id].name)}</span><span class="q">${amount(q, D.needs[id].unit)}</span><span class="w">има дома од претходно</span></div>`).join("") ||
     `<p class="note" style="margin:0">Додај ставки од „Цени" или состави мени.</p>`;
+  $("regular").innerHTML = `<h2 style="margin-bottom:6px">Секоја недела</h2>` + (regular ?
+    `<p style="margin:0 0 10px;font-size:14px">${regular} ${regular === 1 ? "ставка се додава" : "ставки се додаваат"} на листата секоја недела. Количината ја менуваш со − и + кај ставката.</p><button class="ghost" id="clearRegular">Тргни ги редовните</button>` :
+    `<p class="note" style="margin:0 0 10px">За леб, млеко, јајца и друго што се купува секоја недела. Допри „секоја недела" кај ставка што ја додаде, или почни со готов избор и поправи ги количините.</p><button class="ghost" id="addBasics">Додај основни намирници за ${S.people}</button>`);
   const pantry = Object.entries(S.pantry);
   $("pantry").innerHTML = `<h2 style="margin-bottom:6px">Дома имам</h2>` + (pantry.length ? `<p style="margin:0 0 10px;font-size:14px">${pantry.map(([id, q]) => esc(lower(D.needs[id] ? D.needs[id].name : id)) + " " + amount(q, D.needs[id] ? D.needs[id].unit : "кг")).join(", ")}</p><button class="ghost" id="emptyPantry">Испразни</button>` :
     `<p class="note" style="margin:0">Ништо засега. По „Следна недела" тука се запишува што останало од купените пакувања.</p>`);
@@ -553,15 +581,19 @@ $("menu").addEventListener("change", e => {
   S.menu[i] = d; S.locked[i] = d; S.open = -1; render();
 });
 $("next").addEventListener("click", () => { for (const id of S.done) delete S.own[id]; S.history = [...S.history, S.menu].slice(-4); S.pantry = S.after || {}; S.week++; S.locked = {}; S.done = []; replan(); window.scrollTo({ top: 0, behavior: "smooth" }); });
-$("reset").addEventListener("click", () => { S = { ...fresh(), tab: S.tab, watch: S.watch, spent: S.spent }; replan(); });
+$("reset").addEventListener("click", () => { S = { ...fresh(), tab: S.tab, watch: S.watch, spent: S.spent, regular: S.regular, cards: S.cards }; replan(); });
 document.addEventListener("click", e => {
   const t = e.target.closest("[data-tab],[data-go]"); if (t) { S.tab = t.dataset.tab || t.dataset.go; render(); window.scrollTo({ top: 0 }); return; }
   const b = e.target.closest("button"); if (!b) return;
   if (b.dataset.pc !== undefined) { V.chain = b.dataset.pc; V.shown = 40; render(); }
   else if (b.dataset.pg !== undefined) { V.group = b.dataset.pg; V.shown = 40; render(); }
   else if (b.dataset.ng !== undefined) { V.needGroup = V.needGroup === b.dataset.ng ? "" : b.dataset.ng; V.q = ""; $("q").value = ""; render(); }
-  else if (b.dataset.add) { const id = b.dataset.add; if (S.own[id]) delete S.own[id]; else S.own[id] = 1; render(); }
-  else if (b.dataset.own) { e.preventDefault(); const id = b.dataset.own, q = Math.round(((S.own[id] || 0) + +b.dataset.step) * 100) / 100; if (q <= 0) delete S.own[id]; else S.own[id] = q; render(); }
+  else if (b.dataset.add) { const id = b.dataset.add; if (onList(id)) { delete S.own[id]; delete S.regular[id]; } else S.own[id] = pack(id); render(); }
+  else if (b.dataset.card) { S.cards[b.dataset.card] = S.cards[b.dataset.card] === false; reprice(S.cards); replan(); }
+  else if (b.dataset.reg) { e.preventDefault(); const id = b.dataset.reg; if (S.regular[id] != null) { S.own[id] = S.regular[id]; delete S.regular[id]; } else { S.regular[id] = S.own[id] || pack(id); delete S.own[id]; } render(); }
+  else if (b.id === "addBasics") { for (const [id, per] of BASICS) if (D.needs[id] && !onList(id)) S.regular[id] = D.needs[id].unit === "парче" ? Math.ceil(per * S.people) : Math.max(0.25, Math.round(per * S.people * 4) / 4); render(); }
+  else if (b.id === "clearRegular") { S.regular = {}; render(); }
+  else if (b.dataset.own) { e.preventDefault(); const id = b.dataset.own, box = S.regular[id] != null ? S.regular : S.own, q = Math.round(((box[id] || 0) + +b.dataset.step * pack(id)) * 100) / 100; if (q <= 0.005) delete box[id]; else box[id] = q; render(); }
   else if (b.id === "emptyPantry") { S.pantry = {}; render(); }
   else if (b.dataset.watch) { const id = b.dataset.watch; if (S.watch[id]) delete S.watch[id]; else S.watch[id] = { p: minUnit[id], d: D.day.slice(0, 6) }; render(); }
   else if (b.dataset.have) { const id = b.dataset.have; S.have = S.have.includes(id) ? S.have.filter(x => x !== id) : [...S.have, id]; render(); }

@@ -69,7 +69,7 @@ def judge(rows_by_chain: dict, data: dict, groups: list) -> list[dict]:
             dates = _DATE.findall(r["promo_period"])
             until = "-".join(reversed(dates[-1])) if dates else ""
             need_id, hit = index.get((chain, name, description), (None, None))
-            item = {"chain": chain, "name": name, "price": price, "regular": regular, "pct": pct, "until": until,
+            item = {"chain": chain, "name": name, "description": description, "price": price, "regular": regular, "pct": pct, "until": until,
                     "card": bool(CARD.search(r["promo_type"])), "need": need_id or "", "group": names[need_id].group if need_id else "Друго",
                     "unit_price": None, "cheapest": False, "elsewhere": None}
             if hit and hit["unit_price"] and hit["trust"] >= 2 and not hit.get("outlier"):
